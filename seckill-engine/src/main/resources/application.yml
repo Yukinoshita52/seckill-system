@@ -1,6 +1,8 @@
 spring:
   application:
     name: seckill-engine
+  profiles:
+    active: dev
   cloud:
     nacos:
       discovery:
@@ -15,14 +17,20 @@ spring:
       - com.alibaba.cloud.nacos.NacosDiscoveryAutoConfiguration
       - com.alibaba.cloud.nacos.NacosServiceAutoConfiguration
       - com.alibaba.cloud.nacos.NacosConfigAutoConfiguration
-      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
-      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
       - com.alibaba.cloud.sentinel.SentinelAutoConfiguration
       - org.apache.rocketmq.spring.autoconfigure.RocketMQAutoConfiguration
-      - org.redisson.spring.starter.RedissonAutoConfigurationV2
 
 server:
   port: 11020
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      logic-delete-field: isDeleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
 
 springdoc:
   swagger-ui:

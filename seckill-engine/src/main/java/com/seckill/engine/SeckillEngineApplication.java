@@ -1,22 +1,19 @@
 package com.seckill.engine;
 
 import lombok.extern.slf4j.Slf4j;
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.env.Environment;
 
 @Slf4j
 @SpringBootApplication(
-    exclude = {
-      DataSourceAutoConfiguration.class,
-      RedisAutoConfiguration.class,
-      RedisRepositoriesAutoConfiguration.class
-    })
+    exclude = {RedisAutoConfiguration.class, RedisRepositoriesAutoConfiguration.class})
+@MapperScan("com.seckill.engine.dao.mapper")
 public class SeckillEngineApplication {
 
   private final Environment env;
