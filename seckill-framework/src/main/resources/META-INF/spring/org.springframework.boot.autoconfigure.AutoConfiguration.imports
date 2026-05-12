@@ -1,1 +1,2 @@
+com.seckill.framework.config.CacheConfiguration
 com.seckill.framework.web.GlobalExceptionHandler
