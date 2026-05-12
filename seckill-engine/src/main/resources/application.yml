@@ -19,6 +19,7 @@ spring:
       - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
       - com.alibaba.cloud.sentinel.SentinelAutoConfiguration
       - org.apache.rocketmq.spring.autoconfigure.RocketMQAutoConfiguration
+      - org.redisson.spring.starter.RedissonAutoConfigurationV2
 
 server:
   port: 11020
