@@ -1,0 +1,53 @@
+# onecoupon - 已完成的参考项目，不再追踪
+onecoupon/
+
+# Superpowers plugin generated files
+docs/superpowers/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Java / Maven
+*.class
+*.jar
+*.war
+*.ear
+target/
+*.log
+.mvn/
+mvnw
+mvnw.cmd
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Node
+node_modules/
+dist/
+.env
+.env.local
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Misc
+*.tmp
+*.bak
+*.cache
