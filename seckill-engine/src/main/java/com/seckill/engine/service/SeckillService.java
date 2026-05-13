@@ -6,6 +6,11 @@ import com.seckill.engine.dto.resp.SeckillOrderRespDTO;
 /** 秒杀核心服务 */
 public interface SeckillService {
 
-  /** 秒杀下单：校验活动 → 扣减库存 → 创建订单 */
+  /**
+   * 秒杀下单：责任链校验 → 扣减库存 → 创建订单
+   *
+   * @param req 下单请求
+   * @return 下单结果
+   */
   SeckillOrderRespDTO placeOrder(SeckillOrderReqDTO req);
 }
