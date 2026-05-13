@@ -8,7 +8,8 @@ import com.seckill.engine.dto.req.SeckillOrderReqDTO;
 import com.seckill.engine.dto.resp.SeckillOrderRespDTO;
 import com.seckill.engine.service.SeckillService;
 import com.seckill.engine.service.StockService;
-import com.seckill.framework.exception.ClientException;
+import com.seckill.engine.service.chain.SeckillChainContext;
+import com.seckill.engine.service.chain.SeckillChainExecutor;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ThreadLocalRandom;
@@ -25,30 +26,19 @@ public class SeckillServiceImpl implements SeckillService {
   private final SeckillActivityMapper activityMapper;
   private final SeckillOrderMapper orderMapper;
   private final StockService stockService;
+  private final SeckillChainExecutor chainExecutor;
 
   private static final DateTimeFormatter ORDER_NO_FMT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
   @Override
   @Transactional
   public SeckillOrderRespDTO placeOrder(SeckillOrderReqDTO req) {
-    // todo: 接入责任链校验：验证码 -> 活动状态 -> 用户去重 -> 库存预检
-    // todo: 活动信息应从 Redis 缓存读取，避免每次秒杀请求查库；缓存失效时回源 DB
     // todo: 将下单请求投递到本地队列 + RocketMQ，改为异步下单；当前为同步直接返回结果
     // todo: userId 应从登录态/UserContext 获取，不应由客户端传入
 
-    // 1. 校验活动
-    SeckillActivityDO activity = activityMapper.selectById(req.getActivityId());
-    if (activity == null) {
-      throw new ClientException("A000100", "活动不存在");
-    }
-
-    LocalDateTime now = LocalDateTime.now();
-    if (now.isBefore(activity.getStartTime())) {
-      throw new ClientException("A000200", "活动未开始");
-    }
-    if (now.isAfter(activity.getEndTime())) {
-      throw new ClientException("A000300", "活动已结束");
-    }
+    // 1. 责任链校验（参数 → 活动状态 → 用户去重 → 库存预检）
+    SeckillChainContext chainContext = chainExecutor.execute(req);
+    SeckillActivityDO activity = chainContext.getActivity();
 
     // 2. 扣减库存（Lua 原子操作，含去重校验）
     long remaining = stockService.deductStock(activity.getId(), req.getUserId());
