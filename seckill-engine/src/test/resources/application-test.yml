@@ -27,3 +27,7 @@ spring:
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+jwt:
+  secret: test-jwt-secret-key-for-unit-testing-only-32bytes
+  expiration: 7200
