@@ -60,6 +60,7 @@ public class StockServiceImpl implements StockService {
         verifyAfterDeduct(stockKey, activityId, userId, bucket);
         return remaining;
       case 1:
+        // 注意：此处"库存不足"指当前桶已空，总库存可能仍有剩余（分桶策略的已知限制）
         throw new ClientException("A000410", "库存不足");
       case 2:
         throw new ClientException("A000400", "您已购买过");
