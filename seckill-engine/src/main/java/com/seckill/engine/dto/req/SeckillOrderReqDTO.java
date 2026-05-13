@@ -9,9 +9,6 @@ public class SeckillOrderReqDTO {
   @Schema(description = "活动ID", requiredMode = Schema.RequiredMode.REQUIRED)
   private Long activityId;
 
-  @Schema(description = "用户ID", requiredMode = Schema.RequiredMode.REQUIRED)
-  private Long userId;
-
   @Schema(description = "验证码Token")
   private String captchaToken;
 

@@ -10,6 +10,7 @@ import com.seckill.engine.mq.SeckillOrderProducer;
 import com.seckill.engine.service.SeckillService;
 import com.seckill.engine.service.chain.SeckillChainContext;
 import com.seckill.engine.service.chain.SeckillChainExecutor;
+import com.seckill.framework.toolkit.UserContext;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ThreadLocalRandom;
@@ -30,7 +31,7 @@ public class SeckillServiceImpl implements SeckillService {
 
   @Override
   public SeckillOrderRespDTO placeOrder(SeckillOrderReqDTO req) {
-    // todo: userId 应从登录态/UserContext 获取，不应由客户端传入
+    Long userId = UserContext.getUserId();
 
     // 1. 责任链校验（参数 → 活动状态 → 用户去重 → 库存预检）
     SeckillChainContext chainContext = chainExecutor.execute(req);
@@ -38,11 +39,11 @@ public class SeckillServiceImpl implements SeckillService {
 
     // 2. 生成订单号，写入 PENDING 订单
     String orderNo = generateOrderNo();
-    int bucket = (int) (req.getUserId() % activity.getBucketCount());
+    int bucket = (int) (userId % activity.getBucketCount());
     SeckillOrderDO order = SeckillOrderDO.builder()
         .orderNo(orderNo)
         .activityId(activity.getId())
-        .userId(req.getUserId())
+        .userId(userId)
         .seckillPrice(activity.getSeckillPrice())
         .bucketIndex(bucket)
         .status(0)
@@ -53,7 +54,7 @@ public class SeckillServiceImpl implements SeckillService {
     OrderMessage message = OrderMessage.builder()
         .orderNo(orderNo)
         .activityId(activity.getId())
-        .userId(req.getUserId())
+        .userId(userId)
         .bucketIndex(bucket)
         .build();
     try {
@@ -67,7 +68,7 @@ public class SeckillServiceImpl implements SeckillService {
       throw new com.seckill.framework.exception.ServiceException("B000200", "系统繁忙，请稍后重试");
     }
 
-    log.info("秒杀下单已受理: orderNo={}, userId={}, activityId={}", orderNo, req.getUserId(), activity.getId());
+    log.info("秒杀下单已受理: orderNo={}, userId={}, activityId={}", orderNo, userId, activity.getId());
 
     return SeckillOrderRespDTO.builder()
         .orderNo(orderNo)

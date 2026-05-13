@@ -12,9 +12,6 @@ public class SeckillParamCheckHandler implements SeckillChainHandler {
     if (context.getReq().getActivityId() == null) {
       throw new ClientException("A000100", "活动ID不能为空");
     }
-    if (context.getReq().getUserId() == null) {
-      throw new ClientException("A000100", "用户ID不能为空");
-    }
   }
 
   @Override
