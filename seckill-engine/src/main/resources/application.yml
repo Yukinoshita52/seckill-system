@@ -6,19 +6,14 @@ spring:
   cloud:
     nacos:
       discovery:
-        enabled: false
+        enabled: true
       config:
-        enabled: false
+        enabled: true
     sentinel:
-      eager: false
-      enabled: false
-  autoconfigure:
-    exclude:
-      - com.alibaba.cloud.nacos.NacosDiscoveryAutoConfiguration
-      - com.alibaba.cloud.nacos.NacosServiceAutoConfiguration
-      - com.alibaba.cloud.nacos.NacosConfigAutoConfiguration
-      - com.alibaba.cloud.sentinel.SentinelAutoConfiguration
-      - org.apache.rocketmq.spring.autoconfigure.RocketMQAutoConfiguration
+      eager: true
+      enabled: true
+      transport:
+        dashboard: localhost:8858
 
 server:
   port: 11020
