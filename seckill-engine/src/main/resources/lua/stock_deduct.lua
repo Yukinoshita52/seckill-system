@@ -9,6 +9,7 @@ end
 
 local stock = tonumber(redis.call('GET', KEYS[1]))
 if stock == nil or stock <= 0 then
+    -- todo: 桶库存耗尽时 remaining 应返回 0 而非全局 total；当前返回值语义不明确
     local total = tonumber(redis.call('GET', KEYS[3])) or 0
     return bit.bor(bit.lshift(1, 14), total)
 end

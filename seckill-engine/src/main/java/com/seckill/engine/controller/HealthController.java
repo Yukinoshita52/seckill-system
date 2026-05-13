@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class HealthController {
 
+  // todo: 添加 Redis / MySQL / RocketMQ 依赖健康检查，或接入 Spring Actuator health indicators
   @GetMapping("/api/health")
   public Result<Map<String, Object>> health() {
     Map<String, Object> data = new HashMap<>();

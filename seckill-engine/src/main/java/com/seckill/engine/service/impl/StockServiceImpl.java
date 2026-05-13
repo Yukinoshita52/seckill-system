@@ -38,6 +38,8 @@ public class StockServiceImpl implements StockService {
 
   @Override
   public long deductStock(Long activityId, Long userId) {
+    // todo: 桶数量应从活动配置读取（通过参数传入或查 Redis），当前硬编码为 5
+    // todo: Redis key 模式应抽取为常量类或工具方法，统一管理 key 前缀和格式
     int bucket = (int) (userId % 5);
     String stockKey = "stock:" + activityId + ":" + bucket;
     String boughtKey = "bought:" + activityId;
@@ -66,6 +68,7 @@ public class StockServiceImpl implements StockService {
     }
   }
 
+  // todo: 评估写后读校验的必要性和性能开销；若 Lua 脚本已保证正确性，可考虑移除
   private void verifyAfterDeduct(
       String stockKey, Long activityId, Long userId, int bucket) {
     String val = stringRedisTemplate.opsForValue().get(stockKey);
@@ -88,6 +91,8 @@ public class StockServiceImpl implements StockService {
     stringRedisTemplate.execute(compensateScript, keys, String.valueOf(userId));
   }
 
+  // todo: 为 stock/bought/total key 设置 TTL（活动结束时间 + buffer），活动结束后自动清理
+  // todo: 添加幂等校验（如检查 key 是否已存在），防止重复初始化覆盖正在使用的库存
   @Override
   public void initActivityStock(Long activityId, int totalCount, int bucketCount) {
     int perBucket = totalCount / bucketCount;

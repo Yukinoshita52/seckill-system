@@ -21,6 +21,7 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public ActivityQueryRespDTO queryActivity(Long id) {
+    // todo: 活动详情应缓存到 Redis（如 hash 结构），高频读取场景避免每次查库
     SeckillActivityDO activity = activityMapper.selectById(id);
     if (activity == null) {
       throw new ClientException("A000100", "活动不存在");
@@ -42,6 +43,7 @@ public class ActivityServiceImpl implements ActivityService {
         .build();
   }
 
+  // todo: 活动状态应缓存（短 TTL），避免每次请求重新计算；状态变更时主动刷新缓存
   private int resolveStatus(SeckillActivityDO activity) {
     LocalDateTime now = LocalDateTime.now();
     if (now.isBefore(activity.getStartTime())) {

@@ -15,6 +15,7 @@ public class DataBaseConfiguration {
   @Bean
   public MybatisPlusInterceptor mybatisPlusInterceptor() {
     MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
+    // todo: 添加防全表更新/删除插件（BlockAttackInnerInterceptor）；如需乐观锁，添加 OptimisticLockerInnerInterceptor
     interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MYSQL));
     return interceptor;
   }

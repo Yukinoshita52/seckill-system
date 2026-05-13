@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+// todo: 此 DTO 待订单状态查询接口（GET /api/seckill/order/{orderNo}）实现后使用
 @Schema(description = "订单状态响应")
 public class OrderStatusRespDTO {
   @Schema(description = "订单号")
