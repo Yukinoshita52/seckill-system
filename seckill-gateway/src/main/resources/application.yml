@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: seckill-gateway
+  profiles:
+    active: dev
+  cloud:
+    nacos:
+      discovery:
+        enabled: true
+    gateway:
+      routes:
+        - id: seckill-engine
+          uri: lb://seckill-engine
+          predicates:
+            - Path=/api/**
+    sentinel:
+      eager: true
+      enabled: true
+      transport:
+        dashboard: localhost:8858
+
+server:
+  port: 11010
+
+jwt:
+  secret: ${JWT_SECRET:your-jwt-secret-key-at-least-32-bytes-long}
