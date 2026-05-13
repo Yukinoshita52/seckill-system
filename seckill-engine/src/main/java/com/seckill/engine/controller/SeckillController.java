@@ -1,5 +1,7 @@
 package com.seckill.engine.controller;
 
+import com.alibaba.csp.sentinel.annotation.SentinelResource;
+import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.seckill.engine.dto.req.SeckillOrderReqDTO;
 import com.seckill.engine.dto.resp.SeckillOrderRespDTO;
 import com.seckill.engine.service.SeckillService;
@@ -21,11 +23,15 @@ public class SeckillController {
 
   private final SeckillService seckillService;
 
-  // todo: 接入 Sentinel 热点参数限流或网关层限流，防刷防超卖
   // todo: 新增 GET /api/seckill/order/{orderNo} 接口，返回 OrderStatusRespDTO，供前端轮询
   @Operation(summary = "秒杀下单")
   @PostMapping("/order")
+  @SentinelResource(value = "seckill-order", blockHandler = "placeOrderBlockHandler")
   public Result<SeckillOrderRespDTO> placeOrder(@RequestBody SeckillOrderReqDTO req) {
     return Results.success(seckillService.placeOrder(req));
+  }
+
+  public Result<SeckillOrderRespDTO> placeOrderBlockHandler(SeckillOrderReqDTO req, BlockException e) {
+    return Results.failure("B000300", "系统繁忙，请稍后重试");
   }
 }
