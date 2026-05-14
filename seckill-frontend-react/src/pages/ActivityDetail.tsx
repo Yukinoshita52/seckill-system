@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Typography, Button, Spin, Tag } from '@douyinfe/semi-ui';
 import { activityApi } from '../api/activity';
@@ -30,9 +30,10 @@ export default function ActivityDetail() {
     goodsName?: string;
     seckillPrice?: number;
   } | null>(null);
+  const orderNoRef = useRef<string>('');
 
   const { startPolling } = usePolling<OrderStatusResponse>({
-    fetchFn: () => orderApi.getOrderStatus(result?.orderNo || '').then((res) => res.data),
+    fetchFn: () => orderApi.getOrderStatus(orderNoRef.current).then((res) => res.data),
     interval: 2000,
     maxAttempts: 30,
     condition: (data) => data.status !== 'PENDING',
@@ -61,7 +62,7 @@ export default function ActivityDetail() {
         status: 'fail',
         title: '查询超时',
         message: '查询超时，请稍后在订单中心查看',
-        orderNo: result?.orderNo,
+        orderNo: orderNoRef.current,
       });
     },
   });
@@ -92,6 +93,7 @@ export default function ActivityDetail() {
       setSeckillLoading(true);
       const response = await orderApi.placeOrder({ activityId: Number(id) });
       const orderNo = response.data.orderNo;
+      orderNoRef.current = orderNo;
 
       setResult({
         status: 'waiting',
