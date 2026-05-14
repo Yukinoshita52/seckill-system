@@ -1,5 +1,7 @@
 package com.seckill.engine.service.impl;
 
+import static com.seckill.common.constant.RedisKeyConstants.*;
+
 import com.seckill.engine.service.StockService;
 import com.seckill.framework.exception.ClientException;
 import com.seckill.framework.exception.ServiceException;
@@ -42,9 +44,9 @@ public class StockServiceImpl implements StockService {
   public long deductStock(Long activityId, Long userId) {
     int bucketCount = getBucketCount(activityId);
     int bucket = (int) (userId % bucketCount);
-    String stockKey = "stock:" + activityId + ":" + bucket;
-    String boughtKey = "bought:" + activityId;
-    String totalKey = "total:" + activityId;
+    String stockKey = stockKey(activityId, bucket);
+    String boughtKey = boughtKey(activityId);
+    String totalKey = totalKey(activityId);
     List<String> keys = Arrays.asList(stockKey, boughtKey, totalKey);
 
     Long result =
@@ -86,15 +88,15 @@ public class StockServiceImpl implements StockService {
 
   @Override
   public void compensateStock(Long activityId, Long userId, int bucketIndex) {
-    String stockKey = "stock:" + activityId + ":" + bucketIndex;
-    String boughtKey = "bought:" + activityId;
+    String stockKey = stockKey(activityId, bucketIndex);
+    String boughtKey = boughtKey(activityId);
     List<String> keys = Arrays.asList(stockKey, boughtKey);
     stringRedisTemplate.execute(compensateScript, keys, String.valueOf(userId));
   }
 
   @Override
   public void initActivityStock(Long activityId, int totalCount, int bucketCount, LocalDateTime endTime) {
-    String totalKey = "total:" + activityId;
+    String totalKey = totalKey(activityId);
     if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(totalKey))) {
       log.warn("库存已初始化，跳过重复初始化: activityId={}", activityId);
       return;
@@ -106,7 +108,7 @@ public class StockServiceImpl implements StockService {
     int remainder = totalCount % bucketCount;
     for (int i = 0; i < bucketCount; i++) {
       int stock = perBucket + (i < remainder ? 1 : 0);
-      String key = "stock:" + activityId + ":" + i;
+      String key = stockKey(activityId, i);
       stringRedisTemplate.opsForValue().set(key, String.valueOf(stock));
       if (ttlSeconds > 0) {
         stringRedisTemplate.expire(key, ttlSeconds, java.util.concurrent.TimeUnit.SECONDS);
@@ -130,7 +132,7 @@ public class StockServiceImpl implements StockService {
   }
 
   private int getBucketCount(Long activityId) {
-    Object val = stringRedisTemplate.opsForHash().get("activity:" + activityId, "bucketCount");
+    Object val = stringRedisTemplate.opsForHash().get(activityKey(activityId), "bucketCount");
     if (val == null) {
       throw new ServiceException("B000100", "活动缓存未初始化，无法扣减库存: activityId=" + activityId);
     }
@@ -139,7 +141,7 @@ public class StockServiceImpl implements StockService {
 
   @Override
   public Long getTotalStock(Long activityId) {
-    String val = stringRedisTemplate.opsForValue().get("total:" + activityId);
+    String val = stringRedisTemplate.opsForValue().get(totalKey(activityId));
     return val != null ? Long.parseLong(val) : 0L;
   }
 }

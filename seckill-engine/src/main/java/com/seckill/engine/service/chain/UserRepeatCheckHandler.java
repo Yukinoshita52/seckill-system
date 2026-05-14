@@ -1,5 +1,7 @@
 package com.seckill.engine.service.chain;
 
+import static com.seckill.common.constant.RedisKeyConstants.boughtKey;
+
 import com.seckill.framework.exception.ClientException;
 import com.seckill.framework.toolkit.UserContext;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +19,7 @@ public class UserRepeatCheckHandler implements SeckillChainHandler {
   public void handle(SeckillChainContext context) {
     Long activityId = context.getReq().getActivityId();
     Long userId = UserContext.getUserId();
-    String boughtKey = "bought:" + activityId;
+    String boughtKey = boughtKey(activityId);
 
     Boolean isMember = stringRedisTemplate.opsForSet().isMember(boughtKey, String.valueOf(userId));
     if (Boolean.TRUE.equals(isMember)) {

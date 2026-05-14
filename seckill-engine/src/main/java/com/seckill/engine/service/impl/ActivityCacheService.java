@@ -1,5 +1,7 @@
 package com.seckill.engine.service.impl;
 
+import static com.seckill.common.constant.RedisKeyConstants.ACTIVITY_PREFIX;
+
 import com.seckill.common.dao.entity.SeckillActivityDO;
 import com.seckill.common.dao.mapper.SeckillActivityMapper;
 import java.math.BigDecimal;
@@ -19,7 +21,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ActivityCacheService {
 
-  private static final String KEY_PREFIX = "activity:";
+  private static final String KEY_PREFIX = ACTIVITY_PREFIX;
   private static final String NULL_MARKER = "_null";
   private static final long NULL_TTL_MINUTES = 2;
   private static final long LOCK_TTL_SECONDS = 5;

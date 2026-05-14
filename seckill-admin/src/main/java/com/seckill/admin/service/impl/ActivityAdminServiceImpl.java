@@ -1,5 +1,7 @@
 package com.seckill.admin.service.impl;
 
+import static com.seckill.common.constant.RedisKeyConstants.*;
+
 import com.seckill.admin.dto.req.ActivityCreateReqDTO;
 import com.seckill.admin.dto.req.ActivityUpdateReqDTO;
 import com.seckill.admin.dto.resp.ActivityRespDTO;
@@ -86,7 +88,7 @@ public class ActivityAdminServiceImpl implements ActivityAdminService {
       throw new ClientException("A000100", "活动不存在");
     }
 
-    String totalKey = "total:" + id;
+    String totalKey = totalKey(id);
     if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(totalKey))) {
       log.warn("缓存已初始化，跳过重复初始化: activityId={}", id);
       return;
@@ -106,7 +108,7 @@ public class ActivityAdminServiceImpl implements ActivityAdminService {
     hash.put("endTime", activity.getEndTime().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
     hash.put("status", String.valueOf(activity.getStatus()));
 
-    String key = "activity:" + id;
+    String key = activityKey(id);
     stringRedisTemplate.opsForHash().putAll(key, hash);
 
     // TTL = 活动结束时间 + 2小时
@@ -118,7 +120,7 @@ public class ActivityAdminServiceImpl implements ActivityAdminService {
 
     // 写入库存缓存（stock:{activityId}:{bucket}），与 engine Lua 脚本 key 一致
     for (int i = 0; i < activity.getBucketCount(); i++) {
-      String bucketKey = "stock:" + id + ":" + i;
+      String bucketKey = stockKey(id, i);
       int bucketStock = activity.getTotalStock() / activity.getBucketCount();
       if (i < activity.getTotalStock() % activity.getBucketCount()) {
         bucketStock++;

@@ -1,5 +1,7 @@
 package com.seckill.engine.service.chain;
 
+import static com.seckill.common.constant.RedisKeyConstants.totalKey;
+
 import com.seckill.framework.exception.ClientException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -15,7 +17,7 @@ public class StockPreCheckHandler implements SeckillChainHandler {
   @Override
   public void handle(SeckillChainContext context) {
     Long activityId = context.getReq().getActivityId();
-    String totalKey = "total:" + activityId;
+    String totalKey = totalKey(activityId);
 
     String val = stringRedisTemplate.opsForValue().get(totalKey);
     if (val == null || Long.parseLong(val) <= 0) {
