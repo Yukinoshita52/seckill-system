@@ -2,7 +2,9 @@ package com.seckill.engine.mq;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.seckill.common.dao.entity.SeckillOrderDO;
+import com.seckill.common.dao.entity.StockDeductLogDO;
 import com.seckill.common.dao.mapper.SeckillOrderMapper;
+import com.seckill.common.dao.mapper.StockDeductLogMapper;
 import com.seckill.engine.service.StockService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +22,7 @@ public class SeckillOrderConsumer implements RocketMQListener<OrderMessage> {
 
   private final StockService stockService;
   private final SeckillOrderMapper orderMapper;
+  private final StockDeductLogMapper deductLogMapper;
 
   @Override
   @Transactional
@@ -31,7 +34,14 @@ public class SeckillOrderConsumer implements RocketMQListener<OrderMessage> {
       // 1. 扣减库存（Lua 原子操作，含去重校验）
       long remaining = stockService.deductStock(message.getActivityId(), message.getUserId());
 
-      // 2. 更新订单状态为 UNPAID（库存已扣，待支付）
+      // 2. 写入库存扣减审计日志
+      deductLogMapper.insert(StockDeductLogDO.builder()
+          .activityId(message.getActivityId())
+          .userId(message.getUserId())
+          .bucketIndex(message.getBucketIndex())
+          .build());
+
+      // 3. 更新订单状态为 UNPAID（库存已扣，待支付）
       orderMapper.update(null, new LambdaUpdateWrapper<SeckillOrderDO>()
           .eq(SeckillOrderDO::getOrderNo, message.getOrderNo())
           .set(SeckillOrderDO::getStatus, 1));
