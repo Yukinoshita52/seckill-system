@@ -1,5 +1,6 @@
 import { Modal } from '@douyinfe/semi-ui';
 import { IconTickCircle, IconCrossCircleStroked, IconHourglass } from '@douyinfe/semi-icons';
+import { formatPrice } from '../utils/format';
 
 interface SeckillResultProps {
   visible: boolean;
@@ -43,8 +44,8 @@ export default function SeckillResult({ visible, onClose, result }: SeckillResul
         {result.goodsName && (
           <div className="text-sm text-gray-500">商品: {result.goodsName}</div>
         )}
-        {result.seckillPrice && (
-          <div className="text-sm text-gray-500">秒杀价: ¥{result.seckillPrice}</div>
+        {result.seckillPrice != null && (
+          <div className="text-sm text-gray-500">秒杀价: {formatPrice(result.seckillPrice)}</div>
         )}
       </div>
     </Modal>
