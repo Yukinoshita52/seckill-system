@@ -1,11 +1,14 @@
 package com.seckill.engine.service.impl;
 
 import com.seckill.common.dao.entity.SeckillActivityDO;
+import com.seckill.common.dao.mapper.SeckillActivityMapper;
 import com.seckill.engine.dto.resp.ActivityQueryRespDTO;
 import com.seckill.engine.service.ActivityService;
 import com.seckill.engine.service.StockService;
 import com.seckill.framework.exception.ClientException;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,6 +20,7 @@ public class ActivityServiceImpl implements ActivityService {
 
   private final StockService stockService;
   private final ActivityCacheService activityCacheService;
+  private final SeckillActivityMapper activityMapper;
 
   @Override
   public ActivityQueryRespDTO queryActivity(Long id) {
@@ -39,6 +43,28 @@ public class ActivityServiceImpl implements ActivityService {
         .endTime(activity.getEndTime())
         .status(resolveStatus(activity))
         .build();
+  }
+
+  @Override
+  public List<ActivityQueryRespDTO> listActivities() {
+    List<SeckillActivityDO> activities = activityMapper.selectList(null);
+    return activities.stream()
+        .map(activity -> {
+          long remainStock = stockService.getTotalStock(activity.getId());
+          return ActivityQueryRespDTO.builder()
+              .id(activity.getId())
+              .activityName(activity.getActivityName())
+              .goodsName(activity.getGoodsName())
+              .originalPrice(activity.getOriginalPrice())
+              .seckillPrice(activity.getSeckillPrice())
+              .totalStock(activity.getTotalStock())
+              .remainStock(remainStock)
+              .startTime(activity.getStartTime())
+              .endTime(activity.getEndTime())
+              .status(resolveStatus(activity))
+              .build();
+        })
+        .collect(Collectors.toList());
   }
 
   private int resolveStatus(SeckillActivityDO activity) {
