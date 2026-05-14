@@ -13,13 +13,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
-/** 活动信息 Redis 缓存读写层 */
+/** 活动信息 Redis 缓存读写层（含穿透/击穿防护） */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class ActivityCacheService {
 
   private static final String KEY_PREFIX = "activity:";
+  private static final String NULL_MARKER = "_null";
+  private static final long NULL_TTL_MINUTES = 2;
+  private static final long LOCK_TTL_SECONDS = 5;
   private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
   private final StringRedisTemplate stringRedisTemplate;
@@ -64,11 +67,71 @@ public class ActivityCacheService {
     log.debug("活动缓存已写入: key={}", key);
   }
 
-  /** 从 Redis Hash 读取活动信息，返回 null 表示缓存未命中 */
+  /**
+   * 双检锁读缓存，防穿透 + 防击穿。
+   *
+   * <p>穿透防护：DB 不存在时写入空标记（TTL 2分钟），后续请求不再查 DB。
+   * <p>击穿防护：双检锁模式，保证只有一个线程查 DB。
+   * <pre>
+   * 第一次读缓存 → miss → 尝试加锁
+   *   → 拿到锁 → 第二次读缓存 → miss → 查 DB → 写缓存 → 释放锁
+   *   → 拿到锁 → 第二次读缓存 → hit → 直接返回（其他线程已加载）
+   *   → 未拿到锁 → sleep → 重试（回到第一次读缓存）
+   * </pre>
+   */
+  public SeckillActivityDO getWithProtection(Long activityId) {
+    // 1. 第一次读缓存
+    SeckillActivityDO cached = getFromRedis(activityId);
+    if (cached != null) {
+      return cached;
+    }
+
+    // 2. 缓存 miss，尝试获取互斥锁
+    String lockKey = KEY_PREFIX + "lock:" + activityId;
+    Boolean locked = stringRedisTemplate.opsForValue()
+        .setIfAbsent(lockKey, "1", LOCK_TTL_SECONDS, TimeUnit.SECONDS);
+
+    if (Boolean.TRUE.equals(locked)) {
+      // 拿到锁，双检：第二次读缓存
+      try {
+        cached = getFromRedis(activityId);
+        if (cached != null) {
+          return cached;
+        }
+
+        // 第二次也没命中，回源 DB
+        SeckillActivityDO activity = activityMapper.selectById(activityId);
+        if (activity != null) {
+          syncToRedis(activity);
+          return activity;
+        } else {
+          // 穿透防护：DB 不存在，写入空标记
+          cacheNullMarker(activityId);
+          return null;
+        }
+      } finally {
+        stringRedisTemplate.delete(lockKey);
+      }
+    } else {
+      // 未拿到锁，其他线程正在加载，sleep 后重试
+      try {
+        Thread.sleep(50);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      }
+      return getFromRedis(activityId);
+    }
+  }
+
+  /** 从 Redis Hash 读取活动信息，返回 null 表示缓存未命中或为空标记 */
   public SeckillActivityDO getFromRedis(Long activityId) {
     String key = KEY_PREFIX + activityId;
     Map<Object, Object> entries = stringRedisTemplate.opsForHash().entries(key);
     if (entries.isEmpty()) {
+      return null;
+    }
+    // 穿透防护：命中空标记
+    if (entries.containsKey(NULL_MARKER)) {
       return null;
     }
     try {
@@ -89,6 +152,16 @@ public class ActivityCacheService {
       log.warn("活动缓存反序列化失败: key={}, reason={}", key, e.getMessage());
       return null;
     }
+  }
+
+  /** 写入空标记，短 TTL 防穿透 */
+  private void cacheNullMarker(Long activityId) {
+    String key = KEY_PREFIX + activityId;
+    Map<String, String> marker = new HashMap<>();
+    marker.put(NULL_MARKER, "1");
+    stringRedisTemplate.opsForHash().putAll(key, marker);
+    stringRedisTemplate.expire(key, NULL_TTL_MINUTES, TimeUnit.MINUTES);
+    log.debug("写入空标记: key={}", key);
   }
 
   /** 删除活动缓存 */

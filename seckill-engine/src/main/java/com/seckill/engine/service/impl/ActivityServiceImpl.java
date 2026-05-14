@@ -1,7 +1,6 @@
 package com.seckill.engine.service.impl;
 
 import com.seckill.common.dao.entity.SeckillActivityDO;
-import com.seckill.common.dao.mapper.SeckillActivityMapper;
 import com.seckill.engine.dto.resp.ActivityQueryRespDTO;
 import com.seckill.engine.service.ActivityService;
 import com.seckill.engine.service.StockService;
@@ -16,17 +15,12 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ActivityServiceImpl implements ActivityService {
 
-  private final SeckillActivityMapper activityMapper;
   private final StockService stockService;
   private final ActivityCacheService activityCacheService;
 
   @Override
   public ActivityQueryRespDTO queryActivity(Long id) {
-    // 优先从 Redis 读取，秒杀前大量用户浏览详情页，避免打穿 DB
-    SeckillActivityDO activity = activityCacheService.getFromRedis(id);
-    if (activity == null) {
-      activity = activityMapper.selectById(id);
-    }
+    SeckillActivityDO activity = activityCacheService.getWithProtection(id);
     if (activity == null) {
       throw new ClientException("A000100", "活动不存在");
     }
