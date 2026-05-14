@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Table, Button, Modal, Form, Typography, Tag } from '@douyinfe/semi-ui';
+import { Table, Button, Modal, Form, Typography, Tag, Toast } from '@douyinfe/semi-ui';
 import { activityApi } from '../../api/activity';
 import { Activity, ActivityCreateRequest } from '../../types/activity';
 import { formatPrice, getStatusText, getStatusTagType } from '../../utils/format';
@@ -22,7 +22,7 @@ export default function ActivityManage() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(false);
   const [createVisible, setCreateVisible] = useState(false);
-  const formApiRef = useRef<any>(null);
+  const formApiRef = useRef<{ submitForm: () => void } | null>(null);
 
   const fetchActivities = async () => {
     setLoading(true);
@@ -30,7 +30,7 @@ export default function ActivityManage() {
       const response = await activityApi.getAdminActivities();
       setActivities(response.data || []);
     } catch (error) {
-      console.error('Failed to fetch activities:', error);
+      Toast.error('加载活动列表失败');
     } finally {
       setLoading(false);
     }
@@ -53,18 +53,19 @@ export default function ActivityManage() {
       };
       await activityApi.createActivity(payload);
       setCreateVisible(false);
+      Toast.success('活动创建成功');
       fetchActivities();
     } catch (error) {
-      console.error('Failed to create activity:', error);
+      Toast.error('创建活动失败，请重试');
     }
   };
 
   const handleInitCache = async (activityId: number) => {
     try {
       await activityApi.initCache(activityId);
-      alert('缓存初始化成功');
+      Toast.success('缓存初始化成功');
     } catch (error) {
-      console.error('Failed to init cache:', error);
+      Toast.error('缓存初始化失败');
     }
   };
 
@@ -120,15 +121,15 @@ export default function ActivityManage() {
           getFormApi={(api) => { formApiRef.current = api; }}
           onSubmit={handleCreate}
         >
-          <Form.Input field="activityName" label="活动名称" />
-          <Form.Input field="goodsId" label="商品ID" type="number" />
-          <Form.Input field="goodsName" label="商品名称" />
-          <Form.Input field="originalPrice" label="原价" type="number" />
-          <Form.Input field="seckillPrice" label="秒杀价" type="number" />
-          <Form.Input field="totalStock" label="总库存" type="number" />
-          <Form.Input field="bucketCount" label="分桶数" type="number" />
-          <Form.Input field="startTime" label="开始时间" type="datetime-local" />
-          <Form.Input field="endTime" label="结束时间" type="datetime-local" />
+          <Form.Input field="activityName" label="活动名称" rules={[{ required: true, message: '请输入活动名称' }]} />
+          <Form.Input field="goodsId" label="商品ID" type="number" rules={[{ required: true, message: '请输入商品ID' }]} />
+          <Form.Input field="goodsName" label="商品名称" rules={[{ required: true, message: '请输入商品名称' }]} />
+          <Form.Input field="originalPrice" label="原价" type="number" rules={[{ required: true, message: '请输入原价' }]} />
+          <Form.Input field="seckillPrice" label="秒杀价" type="number" rules={[{ required: true, message: '请输入秒杀价' }]} />
+          <Form.Input field="totalStock" label="总库存" type="number" rules={[{ required: true, message: '请输入总库存' }]} />
+          <Form.Input field="bucketCount" label="分桶数" type="number" rules={[{ required: true, message: '请输入分桶数' }]} />
+          <Form.Input field="startTime" label="开始时间" type="datetime-local" rules={[{ required: true, message: '请选择开始时间' }]} />
+          <Form.Input field="endTime" label="结束时间" type="datetime-local" rules={[{ required: true, message: '请选择结束时间' }]} />
         </Form>
       </Modal>
     </div>

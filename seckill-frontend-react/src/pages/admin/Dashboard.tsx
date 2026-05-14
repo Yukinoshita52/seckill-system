@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Card, Typography, Row, Col } from '@douyinfe/semi-ui';
+import { Card, Typography, Row, Col, Spin, Toast } from '@douyinfe/semi-ui';
 import { IconUser, IconSetting, IconTickCircle } from '@douyinfe/semi-icons';
 import { activityApi } from '../../api/activity';
 import { Activity } from '../../types/activity';
@@ -8,6 +8,7 @@ const { Title, Text } = Typography;
 
 export default function Dashboard() {
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchActivities = async () => {
@@ -15,7 +16,9 @@ export default function Dashboard() {
         const response = await activityApi.getAdminActivities();
         setActivities(response.data || []);
       } catch (error) {
-        console.error('Failed to fetch activities:', error);
+        Toast.error('加载活动数据失败');
+      } finally {
+        setLoading(false);
       }
     };
     fetchActivities();
@@ -24,6 +27,14 @@ export default function Dashboard() {
   const activeActivities = activities.filter((a) => a.status === 1);
   const totalStock = activities.reduce((sum, a) => sum + a.totalStock, 0);
   const remainStock = activities.reduce((sum, a) => sum + a.remainStock, 0);
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '256px' }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
