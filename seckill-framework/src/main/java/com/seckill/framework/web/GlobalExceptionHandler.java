@@ -32,8 +32,7 @@ public class GlobalExceptionHandler {
             .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
             .reduce((a, b) -> a + "; " + b)
             .orElse("参数校验失败");
-    // todo: 为参数校验错误分配专用错误码（如 A000001），避免与业务错误码冲突
-    return Results.failure("A000100", message);
+    return Results.failure("A000001", message);
   }
 
   @ExceptionHandler(Throwable.class)
