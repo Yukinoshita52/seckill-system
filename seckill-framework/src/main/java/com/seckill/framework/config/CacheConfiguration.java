@@ -1,5 +1,6 @@
 package com.seckill.framework.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -9,12 +10,14 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @Configuration
 public class CacheConfiguration {
 
+  @Value("${seckill.redis.key-prefix:seckill:}")
+  private String keyPrefix;
+
   @Bean
   public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
     RedisTemplate<String, Object> template = new RedisTemplate<>();
     template.setConnectionFactory(factory);
-    // todo: Redis key 前缀 "seckill:" 应从配置文件读取（@Value），便于多环境/多服务区分
-    RedisKeySerializer keySerializer = new RedisKeySerializer("seckill:");
+    RedisKeySerializer keySerializer = new RedisKeySerializer(keyPrefix);
     template.setKeySerializer(keySerializer);
     template.setHashKeySerializer(keySerializer);
     template.setValueSerializer(new StringRedisSerializer());

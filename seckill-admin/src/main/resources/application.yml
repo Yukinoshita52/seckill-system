@@ -18,3 +18,7 @@ mybatis-plus:
 
 server:
   port: 11030
+
+seckill:
+  redis:
+    key-prefix: seckill:
