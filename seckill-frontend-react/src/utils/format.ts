@@ -23,15 +23,15 @@ export function getStatusText(status: number): string {
   }
 }
 
-export function getStatusTagType(status: number): 'warning' | 'success' | 'danger' {
+export function getStatusTagType(status: number): 'orange' | 'green' | 'red' {
   switch (status) {
     case 0:
-      return 'warning';
+      return 'orange';
     case 1:
-      return 'success';
+      return 'green';
     case 2:
-      return 'danger';
+      return 'red';
     default:
-      return 'warning';
+      return 'orange';
   }
 }
