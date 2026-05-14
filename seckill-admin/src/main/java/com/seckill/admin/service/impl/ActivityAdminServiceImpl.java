@@ -86,6 +86,12 @@ public class ActivityAdminServiceImpl implements ActivityAdminService {
       throw new ClientException("A000100", "活动不存在");
     }
 
+    String totalKey = "total:" + id;
+    if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(totalKey))) {
+      log.warn("缓存已初始化，跳过重复初始化: activityId={}", id);
+      return;
+    }
+
     // 写入活动信息缓存（activity:{id} Hash）
     java.util.Map<String, String> hash = new java.util.HashMap<>();
     hash.put("id", String.valueOf(activity.getId()));
@@ -122,7 +128,6 @@ public class ActivityAdminServiceImpl implements ActivityAdminService {
         stringRedisTemplate.expire(bucketKey, ttlSeconds, java.util.concurrent.TimeUnit.SECONDS);
       }
     }
-    String totalKey = "total:" + id;
     stringRedisTemplate.opsForValue().set(totalKey, String.valueOf(activity.getTotalStock()));
     if (ttlSeconds > 0) {
       stringRedisTemplate.expire(totalKey, ttlSeconds, java.util.concurrent.TimeUnit.SECONDS);

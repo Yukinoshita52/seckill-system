@@ -94,9 +94,14 @@ public class StockServiceImpl implements StockService {
     stringRedisTemplate.execute(compensateScript, keys, String.valueOf(userId));
   }
 
-  // todo: 添加幂等校验（如检查 key 是否已存在），防止重复初始化覆盖正在使用的库存
   @Override
   public void initActivityStock(Long activityId, int totalCount, int bucketCount, LocalDateTime endTime) {
+    String totalKey = "total:" + activityId;
+    if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(totalKey))) {
+      log.warn("库存已初始化，跳过重复初始化: activityId={}", activityId);
+      return;
+    }
+
     long ttlSeconds = calculateTtlSeconds(endTime);
 
     int perBucket = totalCount / bucketCount;
@@ -109,7 +114,6 @@ public class StockServiceImpl implements StockService {
         stringRedisTemplate.expire(key, ttlSeconds, java.util.concurrent.TimeUnit.SECONDS);
       }
     }
-    String totalKey = "total:" + activityId;
     stringRedisTemplate.opsForValue().set(totalKey, String.valueOf(totalCount));
     if (ttlSeconds > 0) {
       stringRedisTemplate.expire(totalKey, ttlSeconds, java.util.concurrent.TimeUnit.SECONDS);
