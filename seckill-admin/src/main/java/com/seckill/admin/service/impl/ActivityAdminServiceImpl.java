@@ -103,26 +103,32 @@ public class ActivityAdminServiceImpl implements ActivityAdminService {
     String key = "activity:" + id;
     stringRedisTemplate.opsForHash().putAll(key, hash);
 
-    // TTL = 活动结束时间 + 1小时
-    long ttlSeconds = java.util.concurrent.TimeUnit.HOURS.toSeconds(1)
+    // TTL = 活动结束时间 + 2小时
+    long ttlSeconds = java.util.concurrent.TimeUnit.HOURS.toSeconds(2)
         + java.time.Duration.between(java.time.LocalDateTime.now(), activity.getEndTime()).getSeconds();
     if (ttlSeconds > 0) {
       stringRedisTemplate.expire(key, ttlSeconds, java.util.concurrent.TimeUnit.SECONDS);
     }
 
-    // 写入库存缓存（stock:{activityId} + 分桶）
-    String stockKey = "stock:" + id;
-    stringRedisTemplate.opsForValue().set(stockKey, String.valueOf(activity.getTotalStock()));
+    // 写入库存缓存（stock:{activityId}:{bucket}），与 engine Lua 脚本 key 一致
     for (int i = 0; i < activity.getBucketCount(); i++) {
-      String bucketKey = "stock:" + id + ":bucket:" + i;
+      String bucketKey = "stock:" + id + ":" + i;
       int bucketStock = activity.getTotalStock() / activity.getBucketCount();
       if (i < activity.getTotalStock() % activity.getBucketCount()) {
         bucketStock++;
       }
       stringRedisTemplate.opsForValue().set(bucketKey, String.valueOf(bucketStock));
+      if (ttlSeconds > 0) {
+        stringRedisTemplate.expire(bucketKey, ttlSeconds, java.util.concurrent.TimeUnit.SECONDS);
+      }
+    }
+    String totalKey = "total:" + id;
+    stringRedisTemplate.opsForValue().set(totalKey, String.valueOf(activity.getTotalStock()));
+    if (ttlSeconds > 0) {
+      stringRedisTemplate.expire(totalKey, ttlSeconds, java.util.concurrent.TimeUnit.SECONDS);
     }
 
-    log.info("活动缓存初始化完成: activityId={}, stock={}, buckets={}", id, activity.getTotalStock(), activity.getBucketCount());
+    log.info("活动缓存初始化完成: activityId={}, stock={}, buckets={}, ttl={}s", id, activity.getTotalStock(), activity.getBucketCount(), ttlSeconds);
   }
 
   private ActivityRespDTO toRespDTO(SeckillActivityDO activity) {

@@ -54,8 +54,8 @@ public class ActivityCacheService {
 
     stringRedisTemplate.opsForHash().putAll(key, hash);
 
-    // TTL = 活动结束时间 + 1小时
-    long ttlSeconds = TimeUnit.HOURS.toSeconds(1)
+    // TTL = 活动结束时间 + 2小时
+    long ttlSeconds = TimeUnit.HOURS.toSeconds(2)
         + java.time.Duration.between(LocalDateTime.now(), activity.getEndTime()).getSeconds();
     if (ttlSeconds > 0) {
       stringRedisTemplate.expire(key, ttlSeconds, TimeUnit.SECONDS);

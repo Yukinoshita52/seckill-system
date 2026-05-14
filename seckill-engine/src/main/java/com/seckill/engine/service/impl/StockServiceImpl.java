@@ -5,6 +5,8 @@ import com.seckill.framework.exception.ClientException;
 import com.seckill.framework.exception.ServiceException;
 import com.seckill.framework.toolkit.StockDecrementReturnCombinedUtil;
 import jakarta.annotation.PostConstruct;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -92,26 +94,37 @@ public class StockServiceImpl implements StockService {
     stringRedisTemplate.execute(compensateScript, keys, String.valueOf(userId));
   }
 
-  // todo: 为 stock/bought/total key 设置 TTL（活动结束时间 + buffer），活动结束后自动清理
   // todo: 添加幂等校验（如检查 key 是否已存在），防止重复初始化覆盖正在使用的库存
   @Override
-  public void initActivityStock(Long activityId, int totalCount, int bucketCount) {
+  public void initActivityStock(Long activityId, int totalCount, int bucketCount, LocalDateTime endTime) {
+    long ttlSeconds = calculateTtlSeconds(endTime);
+
     int perBucket = totalCount / bucketCount;
     int remainder = totalCount % bucketCount;
     for (int i = 0; i < bucketCount; i++) {
       int stock = perBucket + (i < remainder ? 1 : 0);
-      stringRedisTemplate
-          .opsForValue()
-          .set("stock:" + activityId + ":" + i, String.valueOf(stock));
+      String key = "stock:" + activityId + ":" + i;
+      stringRedisTemplate.opsForValue().set(key, String.valueOf(stock));
+      if (ttlSeconds > 0) {
+        stringRedisTemplate.expire(key, ttlSeconds, java.util.concurrent.TimeUnit.SECONDS);
+      }
     }
-    stringRedisTemplate
-        .opsForValue()
-        .set("total:" + activityId, String.valueOf(totalCount));
+    String totalKey = "total:" + activityId;
+    stringRedisTemplate.opsForValue().set(totalKey, String.valueOf(totalCount));
+    if (ttlSeconds > 0) {
+      stringRedisTemplate.expire(totalKey, ttlSeconds, java.util.concurrent.TimeUnit.SECONDS);
+    }
     log.info(
-        "活动库存初始化完成: activityId={}, total={}, buckets={}",
+        "活动库存初始化完成: activityId={}, total={}, buckets={}, ttl={}s",
         activityId,
         totalCount,
-        bucketCount);
+        bucketCount,
+        ttlSeconds);
+  }
+
+  private long calculateTtlSeconds(LocalDateTime endTime) {
+    long bufferSeconds = 2 * 3600;
+    return Duration.between(LocalDateTime.now(), endTime).getSeconds() + bufferSeconds;
   }
 
   @Override

@@ -1,5 +1,7 @@
 package com.seckill.engine.service;
 
+import java.time.LocalDateTime;
+
 /** 库存服务 — Redis Lua 原子操作 */
 public interface StockService {
 
@@ -22,13 +24,14 @@ public interface StockService {
   void compensateStock(Long activityId, Long userId, int bucketIndex);
 
   /**
-   * 初始化活动库存到 Redis（分桶写入）
+   * 初始化活动库存到 Redis（分桶写入），所有 key 设置 TTL = endTime + buffer
    *
    * @param activityId 活动ID
    * @param totalCount 总库存数
    * @param bucketCount 桶数量
+   * @param endTime 活动结束时间
    */
-  void initActivityStock(Long activityId, int totalCount, int bucketCount);
+  void initActivityStock(Long activityId, int totalCount, int bucketCount, LocalDateTime endTime);
 
   /**
    * 查询活动总剩余库存

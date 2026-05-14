@@ -49,7 +49,7 @@ class SeedDataTest {
     }
 
     // 初始化 Redis 库存
-    stockService.initActivityStock(activityId, 1000, 5);
+    stockService.initActivityStock(activityId, 1000, 5, LocalDateTime.now().plusHours(2));
     log.info("Redis 库存初始化完成: activityId={}, stock=1000, buckets=5");
   }
 
@@ -79,7 +79,7 @@ class SeedDataTest {
       log.info("活动插入成功: id={}", activityId);
     }
 
-    stockService.initActivityStock(activityId, 500, 5);
+    stockService.initActivityStock(activityId, 500, 5, LocalDateTime.now().plusHours(4));
     log.info("Redis 库存初始化完成: activityId={}, stock=500, buckets=5");
   }
 }
