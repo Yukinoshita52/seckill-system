@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useCountdown } from '../hooks/useCountdown';
 import { formatCountdown } from '../utils/format';
 
@@ -9,8 +10,13 @@ interface CountdownProps {
 export default function Countdown({ targetTime, onComplete }: CountdownProps) {
   const { hours, minutes, seconds, isFinished } = useCountdown(targetTime);
 
+  useEffect(() => {
+    if (isFinished) {
+      onComplete?.();
+    }
+  }, [isFinished, onComplete]);
+
   if (isFinished) {
-    onComplete?.();
     return <span className="text-green-500 font-bold">已开始</span>;
   }
 
