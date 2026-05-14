@@ -1,7 +1,7 @@
 package com.seckill.engine;
 
-import com.seckill.engine.dao.entity.SeckillActivityDO;
-import com.seckill.engine.dao.mapper.SeckillActivityMapper;
+import com.seckill.common.dao.entity.SeckillActivityDO;
+import com.seckill.common.dao.mapper.SeckillActivityMapper;
 import com.seckill.engine.service.StockService;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

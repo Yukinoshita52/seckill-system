@@ -1,8 +1,8 @@
 package com.seckill.engine.mq;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.seckill.engine.dao.entity.SeckillOrderDO;
-import com.seckill.engine.dao.mapper.SeckillOrderMapper;
+import com.seckill.common.dao.entity.SeckillOrderDO;
+import com.seckill.common.dao.mapper.SeckillOrderMapper;
 import com.seckill.engine.service.StockService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

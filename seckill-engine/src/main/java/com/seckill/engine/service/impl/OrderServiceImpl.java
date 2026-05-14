@@ -1,10 +1,10 @@
 package com.seckill.engine.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.seckill.engine.dao.entity.SeckillActivityDO;
-import com.seckill.engine.dao.entity.SeckillOrderDO;
-import com.seckill.engine.dao.mapper.SeckillActivityMapper;
-import com.seckill.engine.dao.mapper.SeckillOrderMapper;
+import com.seckill.common.dao.entity.SeckillActivityDO;
+import com.seckill.common.dao.entity.SeckillOrderDO;
+import com.seckill.common.dao.mapper.SeckillActivityMapper;
+import com.seckill.common.dao.mapper.SeckillOrderMapper;
 import com.seckill.engine.dto.resp.OrderStatusRespDTO;
 import com.seckill.engine.service.OrderService;
 import com.seckill.framework.exception.ClientException;

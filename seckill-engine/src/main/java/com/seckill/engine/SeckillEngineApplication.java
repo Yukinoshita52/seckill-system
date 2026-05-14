@@ -5,12 +5,14 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.env.Environment;
 
 @Slf4j
 @SpringBootApplication
-@MapperScan("com.seckill.engine.dao.mapper")
+@ComponentScan(basePackages = {"com.seckill.engine", "com.seckill.common.config"})
+@MapperScan("com.seckill.common.dao.mapper")
 public class SeckillEngineApplication {
 
   private final Environment env;

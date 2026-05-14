@@ -11,6 +11,7 @@
 
     <modules>
         <module>seckill-framework</module>
+        <module>seckill-common</module>
         <module>seckill-engine</module>
         <module>seckill-gateway</module>
         <module>seckill-admin</module>

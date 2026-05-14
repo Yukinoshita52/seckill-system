@@ -1,7 +1,7 @@
-package com.seckill.engine.dao.mapper;
+package com.seckill.common.dao.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.seckill.engine.dao.entity.SeckillActivityDO;
+import com.seckill.common.dao.entity.SeckillActivityDO;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
