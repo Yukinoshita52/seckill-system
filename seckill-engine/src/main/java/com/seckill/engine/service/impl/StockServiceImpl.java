@@ -40,9 +40,8 @@ public class StockServiceImpl implements StockService {
 
   @Override
   public long deductStock(Long activityId, Long userId) {
-    // todo: 桶数量应从活动配置读取（通过参数传入或查 Redis），当前硬编码为 5
-    // todo: Redis key 模式应抽取为常量类或工具方法，统一管理 key 前缀和格式
-    int bucket = (int) (userId % 5);
+    int bucketCount = getBucketCount(activityId);
+    int bucket = (int) (userId % bucketCount);
     String stockKey = "stock:" + activityId + ":" + bucket;
     String boughtKey = "bought:" + activityId;
     String totalKey = "total:" + activityId;
@@ -71,7 +70,6 @@ public class StockServiceImpl implements StockService {
     }
   }
 
-  // todo: 评估写后读校验的必要性和性能开销；若 Lua 脚本已保证正确性，可考虑移除
   private void verifyAfterDeduct(
       String stockKey, Long activityId, Long userId, int bucket) {
     String val = stringRedisTemplate.opsForValue().get(stockKey);
@@ -129,6 +127,14 @@ public class StockServiceImpl implements StockService {
   private long calculateTtlSeconds(LocalDateTime endTime) {
     long bufferSeconds = 2 * 3600;
     return Duration.between(LocalDateTime.now(), endTime).getSeconds() + bufferSeconds;
+  }
+
+  private int getBucketCount(Long activityId) {
+    Object val = stringRedisTemplate.opsForHash().get("activity:" + activityId, "bucketCount");
+    if (val == null) {
+      throw new ServiceException("B000100", "活动缓存未初始化，无法扣减库存: activityId=" + activityId);
+    }
+    return Integer.parseInt((String) val);
   }
 
   @Override
