@@ -47,14 +47,14 @@ export default function ActivityDetail() {
           goodsName: data.goodsName,
           seckillPrice: data.seckillPrice,
         });
-        fetchActivity();
+        fetchActivity(true);
       } else if (data.status === 'FAILED' || data.status === 'TIMEOUT') {
         setResult({
           status: 'fail',
           title: '抢购失败',
           message: data.status === 'FAILED' ? '库存不足或已被抢购' : '订单超时未支付',
         });
-        fetchActivity();
+        fetchActivity(true);
       }
     },
     onTimeout: () => {
@@ -67,15 +67,15 @@ export default function ActivityDetail() {
     },
   });
 
-  const fetchActivity = async () => {
+  const fetchActivity = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const response = await activityApi.getActivity(Number(id));
       setActivity(response.data);
     } catch (error) {
       console.error('Failed to fetch activity:', error);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -159,7 +159,7 @@ export default function ActivityDetail() {
 
           {activity.status === 0 && (
             <div className="text-center">
-              <Countdown targetTime={activity.startTime} />
+              <Countdown targetTime={activity.startTime} onComplete={() => fetchActivity(true)} />
             </div>
           )}
 
