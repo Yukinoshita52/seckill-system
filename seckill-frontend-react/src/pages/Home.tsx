@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Card, Typography, Spin, Empty, Tag } from '@douyinfe/semi-ui';
+import { Button, Card, Typography, Spin, Tag } from '@douyinfe/semi-ui';
 import { useNavigate } from 'react-router-dom';
 import { useSeckillStore } from '../stores/useSeckillStore';
 import Countdown from '../components/Countdown';
@@ -7,11 +7,15 @@ import StockProgress from '../components/StockProgress';
 import SeckillButton from '../components/SeckillButton';
 import { formatPrice, getStatusText, getStatusTagType } from '../utils/format';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 export default function Home() {
   const navigate = useNavigate();
   const { activities, loading, error, fetchActivities } = useSeckillStore();
+  const activeCount = activities.filter((activity) => activity.status === 1).length;
+  const pendingCount = activities.filter((activity) => activity.status === 0).length;
+  const remainStock = activities.reduce((sum, activity) => sum + activity.remainStock, 0);
+  const finishedCount = activities.filter((activity) => activity.status === 2).length;
 
   useEffect(() => {
     fetchActivities();
@@ -23,7 +27,7 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center" style={{ height: '60vh' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
         <Spin size="large" />
       </div>
     );
@@ -31,7 +35,7 @@ export default function Home() {
 
   if (error) {
     return (
-      <div className="text-center" style={{ color: 'var(--color-danger)', padding: '48px 0' }}>
+      <div className="text-center" style={{ color: 'var(--color-accent)', padding: '48px 0', fontSize: '14px' }}>
         {error}
       </div>
     );
@@ -39,150 +43,285 @@ export default function Home() {
 
   if (activities.length === 0) {
     return (
-      <div className="text-center" style={{ padding: '80px 0' }}>
-        <Empty description={<span style={{ color: 'var(--color-text-muted)' }}>暂无秒杀活动</span>} />
+      <div className="empty-container">
+        <svg className="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+          <path d="M3 3h18v18H3V3z" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M3 9h18M9 21V9" strokeLinecap="round" />
+        </svg>
+        <div className="empty-title">暂无秒杀活动</div>
+        <div className="empty-desc">请前往管理后台创建秒杀活动</div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
-      {/* Hero Header */}
-      <div className="text-center stagger-children" style={{ padding: '32px 0 48px' }}>
-        <div
-          className="inline-block"
-          style={{
-            fontSize: '11px',
-            fontWeight: 600,
-            letterSpacing: '0.2em',
-            textTransform: 'uppercase',
-            color: 'var(--color-accent)',
-            marginBottom: '12px',
-          }}
-        >
-          Flash Sales
-        </div>
-        <Title
-          heading={2}
-          style={{
-            color: 'var(--color-text)',
-            fontWeight: 800,
-            fontSize: 'clamp(28px, 5vw, 42px)',
-            margin: 0,
-            letterSpacing: '-0.02em',
-          }}
-        >
-          限时秒杀
-        </Title>
-        <Text
-          style={{
-            color: 'var(--color-text-secondary)',
-            fontSize: '16px',
-            marginTop: '8px',
-            display: 'block',
-          }}
-        >
-          热门商品，限时抢购
-        </Text>
-      </div>
+    <div>
+      <section className="hero-showcase stagger-children">
+        <div className="hero-copy">
+          <div className="section-label">Resume Project / Architecture Showcase</div>
+          <h1 className="hero-title" style={{ marginBottom: '18px' }}>
+            面向简历展示的
+            <br />
+            <span className="hero-accent-text">高并发秒杀系统</span>
+          </h1>
+          <p className="hero-subtitle hero-copy-subtitle">
+            这个页面不是普通电商首页，而是把 Redis 分桶库存、四层过滤、RocketMQ 异步削峰和订单状态轮询直接展示给面试官看的系统演示页。
+          </p>
 
-      {/* Activity Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">
-        {activities.map((activity) => (
-          <div
-            key={activity.id}
-            className="animate-fade-in-up"
-            style={{ cursor: 'pointer' }}
-            onClick={() => navigate(`/activity/${activity.id}`)}
-          >
-            <Card
-              style={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-              }}
-              bodyStyle={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '16px' }}
-            >
-              {/* Status badge + Activity name */}
-              <div className="flex justify-between items-start gap-2">
-                <Title
-                  heading={5}
-                  style={{
-                    color: 'var(--color-text)',
-                    fontWeight: 700,
-                    margin: 0,
-                    fontSize: '17px',
-                    lineHeight: 1.3,
-                  }}
-                >
-                  {activity.activityName}
-                </Title>
-                <Tag
-                  color={getStatusTagType(activity.status)}
-                  style={{ flexShrink: 0 }}
-                >
-                  {getStatusText(activity.status)}
-                </Tag>
-              </div>
-
-              {/* Goods name */}
-              <Text
-                type="secondary"
-                style={{
-                  fontSize: '14px',
-                  color: 'var(--color-text-secondary)',
-                }}
-              >
-                {activity.goodsName}
-              </Text>
-
-              {/* Price block */}
-              <div className="flex items-baseline gap-3" style={{ marginTop: 'auto' }}>
-                <span
-                  style={{
-                    fontSize: '28px',
-                    fontWeight: 800,
-                    color: 'var(--color-accent)',
-                    fontFamily: 'JetBrains Mono, monospace',
-                    letterSpacing: '-0.02em',
-                  }}
-                >
-                  {formatPrice(activity.seckillPrice)}
-                </span>
-                <span
-                  style={{
-                    fontSize: '14px',
-                    color: 'var(--color-text-muted)',
-                    textDecoration: 'line-through',
-                    fontFamily: 'JetBrains Mono, monospace',
-                  }}
-                >
-                  {formatPrice(activity.originalPrice)}
-                </span>
-              </div>
-
-              {/* Stock Progress */}
-              <div>
-                <StockProgress
-                  totalStock={activity.totalStock}
-                  remainStock={activity.remainStock}
-                />
-              </div>
-
-              {/* Countdown */}
-              {activity.status === 0 && (
-                <div className="text-center" style={{ padding: '8px 0' }}>
-                  <Countdown targetTime={activity.startTime} />
-                </div>
-              )}
-
-              {/* Action */}
-              <div onClick={(e) => e.stopPropagation()}>
-                <SeckillButton activity={activity} onSeckill={handleSeckill} />
-              </div>
-            </Card>
+          <div className="hero-pill-row">
+            <span className="hero-pill">Redis 分桶库存</span>
+            <span className="hero-pill">Lua 原子扣减</span>
+            <span className="hero-pill">RocketMQ 异步削峰</span>
+            <span className="hero-pill">Sentinel 限流</span>
           </div>
-        ))}
+
+          <div className="hero-flow-inline">
+            <div className="hero-flow-step">
+              <span className="hero-flow-number">01</span>
+              <div>
+                <div className="hero-flow-title">四层过滤</div>
+                <div className="hero-flow-copy">活动状态、重复购买、总库存预检、入口限流。</div>
+              </div>
+            </div>
+            <div className="hero-flow-step">
+              <span className="hero-flow-number">02</span>
+              <div>
+                <div className="hero-flow-title">PENDING 受理</div>
+                <div className="hero-flow-copy">请求先返回排队中，避免同步阻塞。</div>
+              </div>
+            </div>
+            <div className="hero-flow-step">
+              <span className="hero-flow-number">03</span>
+              <div>
+                <div className="hero-flow-title">MQ 异步扣库存</div>
+                <div className="hero-flow-copy">消费者执行 Lua 扣减并推进订单状态。</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="hero-cta-row">
+            <Button
+              type="primary"
+              theme="solid"
+              className="hero-primary-button"
+              onClick={() => document.getElementById('activity-grid')?.scrollIntoView({ behavior: 'smooth' })}
+            >
+              查看活动列表
+            </Button>
+            <Button type="secondary" className="hero-secondary-button" onClick={() => navigate('/login')}>
+              登录体验完整流程
+            </Button>
+          </div>
+
+          <div className="hero-stats hero-stats-left">
+            <div className="hero-stat-card hero-stat-card-compact">
+              <span className="hero-stat-value">{activities.length}</span>
+              <span className="hero-stat-label">活动总数</span>
+            </div>
+            <div className="hero-stat-card hero-stat-card-compact">
+              <span className="hero-stat-value">{activeCount}</span>
+              <span className="hero-stat-label">进行中活动</span>
+            </div>
+            <div className="hero-stat-card hero-stat-card-compact">
+              <span className="hero-stat-value">{remainStock}</span>
+              <span className="hero-stat-label">剩余库存</span>
+            </div>
+            <div className="hero-stat-card hero-stat-card-compact">
+              <span className="hero-stat-value">{pendingCount + finishedCount}</span>
+              <span className="hero-stat-label">非进行中活动</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="hero-board animate-fade-in-up">
+          <div className="hero-demo-card hero-demo-card-primary">
+            <div className="hero-demo-copy">
+              <div className="hero-demo-topline">
+                <div className="section-label" style={{ marginBottom: '10px' }}>后续增强</div>
+                <span className="live-dot">DEMO CONSOLE</span>
+              </div>
+              <h3 className="hero-demo-title">一键演示高并发效果</h3>
+              <p className="hero-demo-desc">
+                预留用于模拟 100 / 500 / 1000 次请求并观察排队、成功率、库存下降和订单状态流转。
+              </p>
+            </div>
+            <div className="demo-metrics">
+              <div className="demo-metric-card">
+                <span className="demo-metric-label">模拟请求数</span>
+                <span className="demo-metric-value">1000</span>
+              </div>
+              <div className="demo-metric-card">
+                <span className="demo-metric-label">订单成功数</span>
+                <span className="demo-metric-value">--</span>
+              </div>
+              <div className="demo-metric-card">
+                <span className="demo-metric-label">库存变化</span>
+                <span className="demo-metric-value">--</span>
+              </div>
+            </div>
+            <div className="demo-button-row">
+              <button className="demo-button" type="button" disabled>100 请求</button>
+              <button className="demo-button" type="button" disabled>500 请求</button>
+              <button className="demo-button" type="button" disabled>1000 请求</button>
+            </div>
+            <div className="demo-placeholder">
+              <span className="demo-placeholder-label">DEMO PANEL RESERVED</span>
+              <span className="demo-placeholder-text">后续可接后端压测接口或本地并发模拟脚本，实时展示排队中、UNPAID、FAILED 的状态流转。</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="feature-strip">
+        <div className="feature-strip-card">
+          <div className="feature-strip-title">库存热点治理</div>
+          <div className="feature-strip-desc">Redis 分桶库存按用户路由，减少单 key 热点写压力。</div>
+        </div>
+        <div className="feature-strip-card">
+          <div className="feature-strip-title">异步削峰填谷</div>
+          <div className="feature-strip-desc">请求先受理再排队处理，前端轮询展示最终状态。</div>
+        </div>
+        <div className="feature-strip-card">
+          <div className="feature-strip-title">工程权衡可讲</div>
+          <div className="feature-strip-desc">当前桶空即失败，未做跨桶查找，适合面试中主动解释 tradeoff。</div>
+        </div>
+      </section>
+
+      <div className="section-shell" id="activity-grid">
+        <div className="section-shell-header">
+          <div>
+            <div className="section-label">精选活动</div>
+            <h2 className="section-shell-title">本场秒杀列表</h2>
+          </div>
+          <div className="section-shell-note">点击卡片查看详情、倒计时、库存进度与下单状态轮询</div>
+        </div>
+        <div className="activity-showcase-grid">
+          <div className="activity-card-grid stagger-children">
+            {activities.map((activity, i) => (
+              <div
+                key={activity.id}
+                className="animate-fade-in-up"
+                style={{ animationDelay: `${0.1 + i * 0.07}s`, cursor: 'pointer' }}
+                onClick={() => navigate(`/activity/${activity.id}`)}
+              >
+                <Card
+                  className="card-glow"
+                  style={{ overflow: 'visible' }}
+                  bodyStyle={{
+                    padding: '28px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '20px',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ flex: 1 }}>
+                      <div
+                        style={{
+                          fontFamily: 'var(--font-display)',
+                          fontWeight: 700,
+                          fontSize: '20px',
+                          color: 'var(--color-text)',
+                          lineHeight: 1.3,
+                          letterSpacing: '-0.01em',
+                          marginBottom: '6px',
+                        }}
+                      >
+                        {activity.activityName}
+                      </div>
+                      <Text type="secondary" style={{ fontSize: '14px', color: 'var(--color-text-secondary)' }}>
+                        {activity.goodsName}
+                      </Text>
+                    </div>
+                    <Tag color={getStatusTagType(activity.status)} style={{ flexShrink: 0, marginLeft: '12px', marginTop: '2px' }}>
+                      {getStatusText(activity.status)}
+                    </Tag>
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'baseline',
+                      gap: '16px',
+                      padding: '20px 0',
+                      borderTop: '1px solid var(--color-border)',
+                      borderBottom: '1px solid var(--color-border)',
+                    }}
+                  >
+                    <span className="price-tag" style={{ fontSize: '36px' }}>
+                      {formatPrice(activity.seckillPrice)}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '15px',
+                        color: 'var(--color-text-muted)',
+                        textDecoration: 'line-through',
+                      }}
+                    >
+                      {formatPrice(activity.originalPrice)}
+                    </span>
+                    <span
+                      style={{
+                        marginLeft: 'auto',
+                        fontSize: '12px',
+                        fontFamily: 'var(--font-mono)',
+                        color: 'var(--color-accent)',
+                        background: 'rgba(255,77,0,0.08)',
+                        padding: '4px 10px',
+                        borderRadius: '4px',
+                        border: '1px solid rgba(255,77,0,0.2)',
+                      }}
+                    >
+                      节省 {formatPrice(activity.originalPrice - activity.seckillPrice)}
+                    </span>
+                  </div>
+
+                  <div>
+                    <StockProgress totalStock={activity.totalStock} remainStock={activity.remainStock} />
+                  </div>
+
+                  {activity.status === 0 && (
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        padding: '14px',
+                        background: 'var(--color-surface-2)',
+                        borderRadius: '10px',
+                        border: '1px solid var(--color-border)',
+                      }}
+                    >
+                      <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', letterSpacing: '0.05em' }}>距开始</span>
+                      <Countdown targetTime={activity.startTime} />
+                    </div>
+                  )}
+
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <SeckillButton activity={activity} onSeckill={handleSeckill} />
+                  </div>
+                </Card>
+              </div>
+            ))}
+          </div>
+          <div className="activity-side-panel">
+            <div className="activity-side-card">
+              <div className="section-label">系统说明</div>
+              <h3 className="activity-side-title">这组活动用于展示真实秒杀链路</h3>
+              <p className="activity-side-copy">活动详情页会展示库存进度、倒计时、下单结果和订单状态轮询，适合在面试时完整演示一次请求如何进入系统并得到最终结果。</p>
+            </div>
+            <div className="activity-side-card">
+              <div className="section-label">状态流转</div>
+              <div className="activity-state-list">
+                <div className="activity-state-item"><span className="activity-state-dot pending" />PENDING: 请求受理，排队处理中</div>
+                <div className="activity-state-item"><span className="activity-state-dot success" />UNPAID: Lua 扣库存成功，订单待支付</div>
+                <div className="activity-state-item"><span className="activity-state-dot fail" />FAILED: 扣库存失败或消息处理异常</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

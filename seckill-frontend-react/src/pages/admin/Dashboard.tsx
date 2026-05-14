@@ -39,34 +39,29 @@ export default function Dashboard() {
   return (
     <div className="space-y-8 animate-fade-in-up">
       {/* Header */}
-      <div>
-        <div
-          style={{
-            fontSize: '11px',
-            fontWeight: 600,
-            letterSpacing: '0.2em',
-            textTransform: 'uppercase',
-            color: 'var(--color-accent)',
-            marginBottom: '8px',
-          }}
-        >
-          管理系统
+      <div className="dashboard-hero">
+        <div>
+          <div className="section-label">管理系统</div>
+          <Title
+            heading={3}
+            style={{
+              color: 'var(--color-text)',
+              fontWeight: 800,
+              margin: 0,
+              fontSize: '26px',
+              letterSpacing: '-0.01em',
+            }}
+          >
+            管理后台
+          </Title>
+          <Text style={{ color: 'var(--color-text-secondary)', fontSize: '14px', marginTop: '6px', display: 'block' }}>
+            实时监控系统状态
+          </Text>
         </div>
-        <Title
-          heading={3}
-          style={{
-            color: 'var(--color-text)',
-            fontWeight: 800,
-            margin: 0,
-            fontSize: '26px',
-            letterSpacing: '-0.01em',
-          }}
-        >
-          管理后台
-        </Title>
-        <Text style={{ color: 'var(--color-text-secondary)', fontSize: '14px', marginTop: '6px', display: 'block' }}>
-          实时监控系统状态
-        </Text>
+        <div className="dashboard-hero-meta">
+          <span className="dashboard-meta-label">活跃活动</span>
+          <span className="dashboard-meta-value">{activeActivities.length}</span>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -94,7 +89,7 @@ export default function Dashboard() {
                 <Text style={{ color: 'var(--color-text-muted)', fontSize: '12px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                   活动总数
                 </Text>
-                <Title heading={3} style={{ color: 'var(--color-text)', fontWeight: 800, margin: '4px 0 0', fontSize: '28px', fontFamily: 'JetBrains Mono, monospace' }}>
+                <Title heading={3} style={{ color: 'var(--color-text)', fontWeight: 800, margin: '4px 0 0', fontSize: '28px', fontFamily: 'var(--font-mono)' }}>
                   {activities.length}
                 </Title>
               </div>
@@ -125,7 +120,7 @@ export default function Dashboard() {
                 <Text style={{ color: 'var(--color-text-muted)', fontSize: '12px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                   进行中活动
                 </Text>
-                <Title heading={3} style={{ color: 'var(--color-text)', fontWeight: 800, margin: '4px 0 0', fontSize: '28px', fontFamily: 'JetBrains Mono, monospace' }}>
+                <Title heading={3} style={{ color: 'var(--color-text)', fontWeight: 800, margin: '4px 0 0', fontSize: '28px', fontFamily: 'var(--font-mono)' }}>
                   {activeActivities.length}
                 </Title>
               </div>
@@ -156,7 +151,7 @@ export default function Dashboard() {
                 <Text style={{ color: 'var(--color-text-muted)', fontSize: '12px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                   总库存 / 剩余
                 </Text>
-                <Title heading={3} style={{ color: 'var(--color-text)', fontWeight: 800, margin: '4px 0 0', fontSize: '28px', fontFamily: 'JetBrains Mono, monospace' }}>
+                <Title heading={3} style={{ color: 'var(--color-text)', fontWeight: 800, margin: '4px 0 0', fontSize: '28px', fontFamily: 'var(--font-mono)' }}>
                   {totalStock} / {remainStock}
                 </Title>
               </div>
@@ -164,6 +159,28 @@ export default function Dashboard() {
           </Card>
         </Col>
       </Row>
+
+      <Card className="glass-card" bodyStyle={{ padding: '28px 32px' }}>
+        <div className="dashboard-summary-grid">
+          <div>
+            <div className="summary-kicker">库存概览</div>
+            <div className="summary-value">{remainStock}</div>
+            <div className="summary-copy">当前系统剩余可售库存</div>
+          </div>
+          <div>
+            <div className="summary-kicker">售罄风险</div>
+            <div className="summary-value">
+              {totalStock === 0 ? '0%' : `${Math.round(((totalStock - remainStock) / totalStock) * 100)}%`}
+            </div>
+            <div className="summary-copy">已被消耗的库存占比</div>
+          </div>
+          <div>
+            <div className="summary-kicker">运行判断</div>
+            <div className="summary-status">{activeActivities.length > 0 ? '活动正常进行中' : '暂无进行中活动'}</div>
+            <div className="summary-copy">建议结合活动管理页检查时间和缓存状态</div>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 }

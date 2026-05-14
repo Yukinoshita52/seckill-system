@@ -28,7 +28,7 @@ apiClient.interceptors.response.use(
   (response) => {
     const data = response.data;
     // 业务错误码处理
-    if (data.code && data.code !== '000000') {
+    if (data.code && data.code !== '0' && data.code !== '000000') {
       return Promise.reject(new Error(data.message || '请求失败'));
     }
     return data;

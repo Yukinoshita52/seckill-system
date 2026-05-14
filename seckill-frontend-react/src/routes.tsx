@@ -1,45 +1,58 @@
+import { Suspense, lazy } from 'react';
+import { Spin } from '@douyinfe/semi-ui';
 import { Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
-import Home from './pages/Home';
-import ActivityDetail from './pages/ActivityDetail';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Dashboard from './pages/admin/Dashboard';
-import ActivityManage from './pages/admin/ActivityManage';
+
+const Home = lazy(() => import('./pages/Home'));
+const ActivityDetail = lazy(() => import('./pages/ActivityDetail'));
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const Dashboard = lazy(() => import('./pages/admin/Dashboard'));
+const ActivityManage = lazy(() => import('./pages/admin/ActivityManage'));
+
+function RouteFallback() {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '40vh' }}>
+      <Spin size="large" />
+    </div>
+  );
+}
 
 export default function AppRoutes() {
   return (
-    <Routes>
-      <Route
-        path="/"
-        element={
-          <Layout>
-            <Home />
-          </Layout>
-        }
-      />
-      <Route
-        path="/activity/:id"
-        element={
-          <Layout>
-            <ActivityDetail />
-          </Layout>
-        }
-      />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route
-        path="/admin"
-        element={
-          <Layout>
-            <ProtectedRoute />
-          </Layout>
-        }
-      >
-        <Route index element={<Dashboard />} />
-        <Route path="activities" element={<ActivityManage />} />
-      </Route>
-    </Routes>
+    <Suspense fallback={<RouteFallback />}>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <Layout>
+              <Home />
+            </Layout>
+          }
+        />
+        <Route
+          path="/activity/:id"
+          element={
+            <Layout>
+              <ActivityDetail />
+            </Layout>
+          }
+        />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route
+          path="/admin"
+          element={
+            <Layout>
+              <ProtectedRoute />
+            </Layout>
+          }
+        >
+          <Route index element={<Dashboard />} />
+          <Route path="activities" element={<ActivityManage />} />
+        </Route>
+      </Routes>
+    </Suspense>
   );
 }
