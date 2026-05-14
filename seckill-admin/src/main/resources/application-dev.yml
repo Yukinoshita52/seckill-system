@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://REDACTED_MYSQL_HOST:REDACTED_MYSQL_PORT/seckill?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    username: seckill
+    password: REDACTED_PASSWORD
+  data:
+    redis:
+      host: REDACTED_HOST
+      port: REDACTED_REDIS_PORT
+  cloud:
+    nacos:
+      server-addr: localhost:8848
+
+jwt:
+  secret: your-jwt-secret-key-at-least-32-bytes-long
+  expiration: 7200

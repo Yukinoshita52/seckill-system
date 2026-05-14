@@ -11,6 +11,10 @@ public final class Results {
     return new Result<>("0", "success", data, getRequestId());
   }
 
+  public static Result<Void> success() {
+    return new Result<>("0", "success", null, getRequestId());
+  }
+
   public static <T> Result<T> failure(String code, String message) {
     return new Result<>(code, message, null, getRequestId());
   }

@@ -9,6 +9,10 @@ spring:
         enabled: true
     gateway:
       routes:
+        - id: seckill-admin
+          uri: lb://seckill-admin
+          predicates:
+            - Path=/api/admin/**
         - id: seckill-engine
           uri: lb://seckill-engine
           predicates:
