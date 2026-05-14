@@ -31,20 +31,20 @@ public class SeckillOrderConsumer implements RocketMQListener<OrderMessage> {
       // 1. 扣减库存（Lua 原子操作，含去重校验）
       long remaining = stockService.deductStock(message.getActivityId(), message.getUserId());
 
-      // 2. 更新订单状态为成功
+      // 2. 更新订单状态为 UNPAID（库存已扣，待支付）
       orderMapper.update(null, new LambdaUpdateWrapper<SeckillOrderDO>()
           .eq(SeckillOrderDO::getOrderNo, message.getOrderNo())
           .set(SeckillOrderDO::getStatus, 1));
 
-      log.info("订单处理成功: orderNo={}, remaining={}", message.getOrderNo(), remaining);
+      log.info("订单处理成功，待支付: orderNo={}, remaining={}", message.getOrderNo(), remaining);
 
     } catch (Exception e) {
       log.error("订单处理失败: orderNo={}, reason={}", message.getOrderNo(), e.getMessage());
 
-      // 3. 更新订单状态为失败
+      // 3. 更新订单状态为 FAILED
       orderMapper.update(null, new LambdaUpdateWrapper<SeckillOrderDO>()
           .eq(SeckillOrderDO::getOrderNo, message.getOrderNo())
-          .set(SeckillOrderDO::getStatus, 2));
+          .set(SeckillOrderDO::getStatus, 3));
     }
   }
 }

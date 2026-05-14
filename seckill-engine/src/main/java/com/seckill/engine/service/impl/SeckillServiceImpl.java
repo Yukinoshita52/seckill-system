@@ -63,7 +63,7 @@ public class SeckillServiceImpl implements SeckillService {
       log.error("MQ 发送失败，标记订单为 FAILED: orderNo={}", orderNo, e);
       SeckillOrderDO failedOrder = new SeckillOrderDO();
       failedOrder.setOrderNo(orderNo);
-      failedOrder.setStatus(2);
+      failedOrder.setStatus(3);
       orderMapper.updateById(failedOrder);
       throw new com.seckill.framework.exception.ServiceException("B000200", "系统繁忙，请稍后重试");
     }

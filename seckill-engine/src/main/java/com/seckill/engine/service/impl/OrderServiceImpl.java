@@ -42,9 +42,10 @@ public class OrderServiceImpl implements OrderService {
   private String mapStatus(Integer status) {
     return switch (status) {
       case 0 -> "PENDING";
-      case 1 -> "SUCCESS";
-      case 2 -> "FAILED";
-      case 3 -> "TIMEOUT";
+      case 1 -> "UNPAID";
+      case 2 -> "SUCCESS";
+      case 3 -> "FAILED";
+      case 4 -> "TIMEOUT";
       default -> "UNKNOWN";
     };
   }
