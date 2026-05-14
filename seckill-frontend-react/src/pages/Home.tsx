@@ -11,7 +11,7 @@ const { Title, Text } = Typography;
 
 export default function Home() {
   const navigate = useNavigate();
-  const { activities, loading, fetchActivities } = useSeckillStore();
+  const { activities, loading, error, fetchActivities } = useSeckillStore();
 
   useEffect(() => {
     fetchActivities();
@@ -27,6 +27,10 @@ export default function Home() {
         <Spin size="large" />
       </div>
     );
+  }
+
+  if (error) {
+    return <div className="text-center text-red-500 py-8">{error}</div>;
   }
 
   if (activities.length === 0) {

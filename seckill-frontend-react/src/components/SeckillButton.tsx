@@ -24,7 +24,7 @@ export default function SeckillButton({ activity, onSeckill, loading }: SeckillB
       theme="solid"
       disabled={isDisabled}
       loading={loading}
-      onClick={() => onSeckill(activity.id)}
+      onClick={(e) => { e.stopPropagation(); onSeckill(activity.id); }}
       className="w-full"
     >
       {getButtonText()}
