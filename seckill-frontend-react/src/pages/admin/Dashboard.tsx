@@ -30,45 +30,135 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '256px' }}>
+      <div className="flex justify-center items-center" style={{ height: '60vh' }}>
         <Spin size="large" />
       </div>
     );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      <Title heading={3}>管理后台</Title>
-      <Row gutter={16}>
+    <div className="space-y-8 animate-fade-in-up">
+      {/* Header */}
+      <div>
+        <div
+          style={{
+            fontSize: '11px',
+            fontWeight: 600,
+            letterSpacing: '0.2em',
+            textTransform: 'uppercase',
+            color: 'var(--color-accent)',
+            marginBottom: '8px',
+          }}
+        >
+          管理系统
+        </div>
+        <Title
+          heading={3}
+          style={{
+            color: 'var(--color-text)',
+            fontWeight: 800,
+            margin: 0,
+            fontSize: '26px',
+            letterSpacing: '-0.01em',
+          }}
+        >
+          管理后台
+        </Title>
+        <Text style={{ color: 'var(--color-text-secondary)', fontSize: '14px', marginTop: '6px', display: 'block' }}>
+          实时监控系统状态
+        </Text>
+      </div>
+
+      {/* Stats Cards */}
+      <Row gutter={16} className="stagger-children">
         <Col span={8}>
-          <Card>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <IconSetting size="extra-large" style={{ color: 'var(--semi-color-primary)' }} />
+          <Card
+            style={{
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              borderRadius: '12px',
+              padding: '24px',
+            }}
+          >
+            <div className="flex items-center gap-4">
+              <div
+                className="flex items-center justify-center w-12 h-12 rounded-xl"
+                style={{
+                  background: 'rgba(245, 158, 11, 0.12)',
+                  border: '1px solid rgba(245, 158, 11, 0.2)',
+                }}
+              >
+                <IconSetting size="large" style={{ color: 'var(--color-accent)' }} />
+              </div>
               <div>
-                <Text type="secondary" size="small">活动总数</Text>
-                <Title heading={3} style={{ margin: 0 }}>{activities.length}</Title>
+                <Text style={{ color: 'var(--color-text-muted)', fontSize: '12px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                  活动总数
+                </Text>
+                <Title heading={3} style={{ color: 'var(--color-text)', fontWeight: 800, margin: '4px 0 0', fontSize: '28px', fontFamily: 'JetBrains Mono, monospace' }}>
+                  {activities.length}
+                </Title>
               </div>
             </div>
           </Card>
         </Col>
+
         <Col span={8}>
-          <Card>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <IconUser size="extra-large" style={{ color: 'var(--semi-color-success)' }} />
+          <Card
+            style={{
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              borderRadius: '12px',
+              padding: '24px',
+            }}
+          >
+            <div className="flex items-center gap-4">
+              <div
+                className="flex items-center justify-center w-12 h-12 rounded-xl"
+                style={{
+                  background: 'rgba(34, 197, 94, 0.12)',
+                  border: '1px solid rgba(34, 197, 94, 0.2)',
+                }}
+              >
+                <IconUser size="large" style={{ color: 'var(--color-success)' }} />
+              </div>
               <div>
-                <Text type="secondary" size="small">进行中活动</Text>
-                <Title heading={3} style={{ margin: 0 }}>{activeActivities.length}</Title>
+                <Text style={{ color: 'var(--color-text-muted)', fontSize: '12px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                  进行中活动
+                </Text>
+                <Title heading={3} style={{ color: 'var(--color-text)', fontWeight: 800, margin: '4px 0 0', fontSize: '28px', fontFamily: 'JetBrains Mono, monospace' }}>
+                  {activeActivities.length}
+                </Title>
               </div>
             </div>
           </Card>
         </Col>
+
         <Col span={8}>
-          <Card>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <IconTickCircle size="extra-large" style={{ color: 'var(--semi-color-warning)' }} />
+          <Card
+            style={{
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              borderRadius: '12px',
+              padding: '24px',
+            }}
+          >
+            <div className="flex items-center gap-4">
+              <div
+                className="flex items-center justify-center w-12 h-12 rounded-xl"
+                style={{
+                  background: 'rgba(168, 85, 247, 0.12)',
+                  border: '1px solid rgba(168, 85, 247, 0.2)',
+                }}
+              >
+                <IconTickCircle size="large" style={{ color: '#a855f7' }} />
+              </div>
               <div>
-                <Text type="secondary" size="small">总库存 / 剩余库存</Text>
-                <Title heading={3} style={{ margin: 0 }}>{totalStock} / {remainStock}</Title>
+                <Text style={{ color: 'var(--color-text-muted)', fontSize: '12px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                  总库存 / 剩余
+                </Text>
+                <Title heading={3} style={{ color: 'var(--color-text)', fontWeight: 800, margin: '4px 0 0', fontSize: '28px', fontFamily: 'JetBrains Mono, monospace' }}>
+                  {totalStock} / {remainStock}
+                </Title>
               </div>
             </div>
           </Card>

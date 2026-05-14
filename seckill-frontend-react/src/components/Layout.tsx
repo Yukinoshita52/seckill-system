@@ -23,9 +23,52 @@ export default function Layout({ children }: LayoutProps) {
   };
 
   return (
-    <SemiLayout className="min-h-screen">
-      <Header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
+    <SemiLayout style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
+      <Header
+        style={{
+          background: 'rgba(20, 20, 26, 0.85)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderBottom: '1px solid var(--color-border)',
+          height: '64px',
+          lineHeight: '64px',
+        }}
+      >
+        <div
+          className="max-w-7xl mx-auto px-6 flex items-center justify-between"
+          style={{ height: '100%' }}
+        >
+          {/* Logo */}
+          <div
+            className="flex items-center gap-3 cursor-pointer"
+            onClick={() => navigate('/')}
+          >
+            <div
+              className="flex items-center justify-center w-8 h-8 rounded-lg"
+              style={{
+                background: 'linear-gradient(135deg, var(--color-accent) 0%, #ea580c 100%)',
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"
+                  fill="currentColor"
+                  style={{ color: '#000' }}
+                />
+              </svg>
+            </div>
+            <span
+              style={{
+                fontWeight: 700,
+                fontSize: '18px',
+                color: 'var(--color-text)',
+                letterSpacing: '-0.01em',
+              }}
+            >
+              秒杀
+            </span>
+          </div>
+
           <Nav
             mode="horizontal"
             selectedKeys={[location.pathname]}
@@ -39,27 +82,58 @@ export default function Layout({ children }: LayoutProps) {
                   ]
                 : []),
             ]}
+            style={{ background: 'transparent', border: 'none' }}
           />
-          <div className="flex items-center gap-4">
+
+          <div className="flex items-center gap-3">
             {isAuthenticated ? (
               <>
-                <Avatar size="small" color="blue">
+                <Avatar
+                  size="small"
+                  style={{
+                    background: 'linear-gradient(135deg, var(--color-accent), #ea580c)',
+                    color: '#000',
+                    fontWeight: 700,
+                    fontSize: '12px',
+                  }}
+                >
                   {username?.charAt(0).toUpperCase()}
                 </Avatar>
-                <span className="text-sm text-gray-600">{username}</span>
-                <Button type="tertiary" onClick={handleLogout}>
+                <span
+                  style={{
+                    fontSize: '14px',
+                    color: 'var(--color-text-secondary)',
+                    fontWeight: 500,
+                  }}
+                >
+                  {username}
+                </span>
+                <Button
+                  type="tertiary"
+                  size="small"
+                  onClick={handleLogout}
+                  style={{ fontSize: '13px' }}
+                >
                   退出
                 </Button>
               </>
             ) : (
-              <Button type="primary" onClick={() => navigate('/login')}>
+              <Button
+                type="primary"
+                size="small"
+                onClick={() => navigate('/login')}
+                style={{ fontSize: '13px', fontWeight: 600 }}
+              >
                 登录
               </Button>
             )}
           </div>
         </div>
       </Header>
-      <Content className="max-w-7xl mx-auto px-4 py-6">
+      <Content
+        className="max-w-7xl mx-auto px-6 py-8"
+        style={{ background: 'transparent' }}
+      >
         {children}
       </Content>
     </SemiLayout>
