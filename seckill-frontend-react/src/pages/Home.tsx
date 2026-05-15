@@ -10,6 +10,7 @@ import { DemoMetrics } from '../types/demo';
 import { formatPrice, getStatusText, getStatusTagType } from '../utils/format';
 
 const { Text } = Typography;
+const DEMO_REQUEST_COUNT = 100;
 
 export default function Home() {
   const navigate = useNavigate();
@@ -17,6 +18,8 @@ export default function Home() {
   const [demoMetrics, setDemoMetrics] = useState<DemoMetrics | null>(null);
   const [demoLoading, setDemoLoading] = useState(false);
   const [demoError, setDemoError] = useState<string | null>(null);
+  const [demoRunLoading, setDemoRunLoading] = useState<number | null>(null);
+  const [demoRunMessage, setDemoRunMessage] = useState<string | null>(null);
   const activeCount = activities.filter((activity) => activity.status === 1).length;
   const pendingCount = activities.filter((activity) => activity.status === 0).length;
   const remainStock = activities.reduce((sum, activity) => sum + activity.remainStock, 0);
@@ -74,8 +77,42 @@ export default function Home() {
     };
   }, [demoActivity]);
 
+  const loadDemoMetricsOnce = async () => {
+    if (!demoActivity) {
+      return;
+    }
+    try {
+      setDemoError(null);
+      const response = await demoApi.getMetrics(demoActivity.id);
+      setDemoMetrics(response.data);
+    } catch (err) {
+      setDemoError((err as Error).message);
+    }
+  };
+
   const handleSeckill = (id: number) => {
     navigate(`/activity/${id}`);
+  };
+
+  const handleRunDemo = async (requestCount: number) => {
+    if (!demoActivity) {
+      return;
+    }
+    try {
+      setDemoRunLoading(requestCount);
+      setDemoRunMessage(null);
+      setDemoError(null);
+      const response = await demoApi.runDemo({
+        activityId: demoActivity.id,
+        requestCount,
+      });
+      setDemoRunMessage(response.data.message);
+      await loadDemoMetricsOnce();
+    } catch (err) {
+      setDemoError((err as Error).message);
+    } finally {
+      setDemoRunLoading(null);
+    }
   };
 
   const stockConsumed = demoMetrics ? Math.max(demoMetrics.totalStock - demoMetrics.remainStock, 0) : null;
@@ -197,16 +234,16 @@ export default function Home() {
                 </div>
                 <span className="live-dot">DEMO CONSOLE</span>
               </div>
-              <h3 className="hero-demo-title">一键演示高并发效果</h3>
+              <h3 className="hero-demo-title">一键演示真实链路效果</h3>
               <p className="hero-demo-desc">
-                当前已接入真实后端聚合数据，展示请求总数、成功订单、库存消耗和状态流转。后续只需再补一个触发接口，就能完成真正的一键演示。
+                当前触发的是真实秒杀业务链路，不是压测模式。点击后会批量提交一组真实请求，用于展示订单创建、MQ 异步处理、库存扣减和状态流转。
               </p>
             </div>
             <div className="demo-metrics">
               <div className="demo-metric-card">
-                <span className="demo-metric-label">真实请求数</span>
+                <span className="demo-metric-label">本轮触发数</span>
                 <span className="demo-metric-value">
-                  {demoLoading && !demoMetrics ? '--' : demoMetrics?.requestCount ?? '--'}
+                  {DEMO_REQUEST_COUNT}
                 </span>
               </div>
               <div className="demo-metric-card">
@@ -223,12 +260,20 @@ export default function Home() {
               </div>
             </div>
             <div className="demo-button-row">
-              <button className="demo-button" type="button" disabled>100 请求</button>
-              <button className="demo-button" type="button" disabled>500 请求</button>
-              <button className="demo-button" type="button" disabled>1000 请求</button>
+              <button
+                className="demo-button demo-button-active demo-button-primary"
+                type="button"
+                onClick={() => void handleRunDemo(DEMO_REQUEST_COUNT)}
+                disabled={demoRunLoading !== null}
+              >
+                {demoRunLoading === DEMO_REQUEST_COUNT ? '触发中...' : '一键演示真实链路效果'}
+              </button>
             </div>
             <div className="demo-placeholder">
               <span className="demo-placeholder-label">LIVE STATUS FLOW</span>
+              {demoRunMessage ? (
+                <span className="demo-placeholder-text">{demoRunMessage}</span>
+              ) : null}
               {demoError ? (
                 <span className="demo-placeholder-text">演示数据加载失败：{demoError}</span>
               ) : demoMetrics ? (
@@ -243,6 +288,7 @@ export default function Home() {
               ) : (
                 <span className="demo-placeholder-text">正在等待演示数据返回。</span>
               )}
+              <span className="demo-placeholder-note">说明：该按钮用于展示真实业务链路效果，不作为压测结果口径。</span>
             </div>
           </div>
         </div>
