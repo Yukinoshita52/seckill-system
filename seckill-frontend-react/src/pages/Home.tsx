@@ -1,10 +1,12 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button, Card, Typography, Spin, Tag } from '@douyinfe/semi-ui';
 import { useNavigate } from 'react-router-dom';
 import { useSeckillStore } from '../stores/useSeckillStore';
 import Countdown from '../components/Countdown';
 import StockProgress from '../components/StockProgress';
 import SeckillButton from '../components/SeckillButton';
+import { demoApi } from '../api/demo';
+import { DemoMetrics } from '../types/demo';
 import { formatPrice, getStatusText, getStatusTagType } from '../utils/format';
 
 const { Text } = Typography;
@@ -12,18 +14,71 @@ const { Text } = Typography;
 export default function Home() {
   const navigate = useNavigate();
   const { activities, loading, error, fetchActivities } = useSeckillStore();
+  const [demoMetrics, setDemoMetrics] = useState<DemoMetrics | null>(null);
+  const [demoLoading, setDemoLoading] = useState(false);
+  const [demoError, setDemoError] = useState<string | null>(null);
   const activeCount = activities.filter((activity) => activity.status === 1).length;
   const pendingCount = activities.filter((activity) => activity.status === 0).length;
   const remainStock = activities.reduce((sum, activity) => sum + activity.remainStock, 0);
   const finishedCount = activities.filter((activity) => activity.status === 2).length;
+  const demoActivity = useMemo(
+    () => activities.find((activity) => activity.status === 1) ?? activities[0] ?? null,
+    [activities]
+  );
 
   useEffect(() => {
     fetchActivities();
   }, [fetchActivities]);
 
+  useEffect(() => {
+    if (!demoActivity) {
+      setDemoMetrics(null);
+      setDemoError(null);
+      return;
+    }
+
+    let disposed = false;
+    let intervalId: ReturnType<typeof setInterval> | undefined;
+
+    const loadDemoMetrics = async (silent = false) => {
+      try {
+        if (!silent) {
+          setDemoLoading(true);
+        }
+        setDemoError(null);
+        const response = await demoApi.getMetrics(demoActivity.id);
+        if (!disposed) {
+          setDemoMetrics(response.data);
+        }
+      } catch (err) {
+        if (!disposed) {
+          setDemoError((err as Error).message);
+        }
+      } finally {
+        if (!disposed && !silent) {
+          setDemoLoading(false);
+        }
+      }
+    };
+
+    loadDemoMetrics();
+    intervalId = setInterval(() => {
+      void loadDemoMetrics(true);
+    }, 5000);
+
+    return () => {
+      disposed = true;
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [demoActivity]);
+
   const handleSeckill = (id: number) => {
     navigate(`/activity/${id}`);
   };
+
+  const stockConsumed = demoMetrics ? Math.max(demoMetrics.totalStock - demoMetrics.remainStock, 0) : null;
 
   if (loading) {
     return (
@@ -137,26 +192,34 @@ export default function Home() {
           <div className="hero-demo-card hero-demo-card-primary">
             <div className="hero-demo-copy">
               <div className="hero-demo-topline">
-                <div className="section-label" style={{ marginBottom: '10px' }}>后续增强</div>
+                <div className="section-label" style={{ marginBottom: '10px' }}>
+                  {demoMetrics ? `实时演示 / ${demoMetrics.activityName}` : '实时演示'}
+                </div>
                 <span className="live-dot">DEMO CONSOLE</span>
               </div>
               <h3 className="hero-demo-title">一键演示高并发效果</h3>
               <p className="hero-demo-desc">
-                预留用于模拟 100 / 500 / 1000 次请求并观察排队、成功率、库存下降和订单状态流转。
+                当前已接入真实后端聚合数据，展示请求总数、成功订单、库存消耗和状态流转。后续只需再补一个触发接口，就能完成真正的一键演示。
               </p>
             </div>
             <div className="demo-metrics">
               <div className="demo-metric-card">
-                <span className="demo-metric-label">模拟请求数</span>
-                <span className="demo-metric-value">1000</span>
+                <span className="demo-metric-label">真实请求数</span>
+                <span className="demo-metric-value">
+                  {demoLoading && !demoMetrics ? '--' : demoMetrics?.requestCount ?? '--'}
+                </span>
               </div>
               <div className="demo-metric-card">
                 <span className="demo-metric-label">订单成功数</span>
-                <span className="demo-metric-value">--</span>
+                <span className="demo-metric-value">
+                  {demoLoading && !demoMetrics ? '--' : demoMetrics?.successCount ?? '--'}
+                </span>
               </div>
               <div className="demo-metric-card">
-                <span className="demo-metric-label">库存变化</span>
-                <span className="demo-metric-value">--</span>
+                <span className="demo-metric-label">库存消耗</span>
+                <span className="demo-metric-value">
+                  {demoLoading && !demoMetrics ? '--' : stockConsumed ?? '--'}
+                </span>
               </div>
             </div>
             <div className="demo-button-row">
@@ -165,8 +228,21 @@ export default function Home() {
               <button className="demo-button" type="button" disabled>1000 请求</button>
             </div>
             <div className="demo-placeholder">
-              <span className="demo-placeholder-label">DEMO PANEL RESERVED</span>
-              <span className="demo-placeholder-text">后续可接后端压测接口或本地并发模拟脚本，实时展示排队中、UNPAID、FAILED 的状态流转。</span>
+              <span className="demo-placeholder-label">LIVE STATUS FLOW</span>
+              {demoError ? (
+                <span className="demo-placeholder-text">演示数据加载失败：{demoError}</span>
+              ) : demoMetrics ? (
+                <div className="demo-status-list">
+                  {demoMetrics.statusFlow.map((item) => (
+                    <div key={item.status} className="demo-status-item">
+                      <span className="demo-status-name">{item.status}</span>
+                      <span className="demo-status-count">{item.count}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <span className="demo-placeholder-text">正在等待演示数据返回。</span>
+              )}
             </div>
           </div>
         </div>
