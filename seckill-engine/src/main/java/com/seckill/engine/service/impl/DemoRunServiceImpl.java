@@ -27,22 +27,24 @@ public class DemoRunServiceImpl implements DemoRunService {
 
   @Override
   public DemoRunRespDTO runDemo(DemoRunReqDTO req) {
-    if (req.getActivityId() == null) {
+    Long activityId = req.getActivityId();
+    Integer reqCount = req.getRequestCount();
+    if (activityId == null) {
       throw new ClientException("A000100", "活动ID不能为空");
     }
-    if (req.getRequestCount() == null || req.getRequestCount() <= 0) {
+    if (reqCount == null || reqCount <= 0) {
       throw new ClientException("A000100", "模拟请求数必须大于 0");
     }
-    if (req.getRequestCount() > MAX_REQUEST_COUNT) {
+    if (reqCount > MAX_REQUEST_COUNT) {
       throw new ClientException("A000100", "模拟请求数不能超过 " + MAX_REQUEST_COUNT);
     }
 
-    int concurrency = Math.min(req.getRequestCount(), 32);
+    int concurrency = Math.min(reqCount, 32);
     ExecutorService executor = Executors.newFixedThreadPool(concurrency);
-    List<Callable<Boolean>> tasks = new ArrayList<>(req.getRequestCount());
-    for (int i = 0; i < req.getRequestCount(); i++) {
+    List<Callable<Boolean>> tasks = new ArrayList<>(reqCount);
+    for (int i = 0; i < reqCount; i++) {
       final long demoUserId = DEMO_USER_BASE + i + System.nanoTime() % 100000;
-      tasks.add(() -> submitDemoOrder(req.getActivityId(), demoUserId));
+      tasks.add(() -> submitDemoOrder(activityId, demoUserId));
     }
 
     int acceptedCount = 0;
@@ -60,13 +62,13 @@ public class DemoRunServiceImpl implements DemoRunService {
       executor.shutdown();
     }
 
-    int rejectedCount = req.getRequestCount() - acceptedCount;
+    int rejectedCount = reqCount - acceptedCount;
     return DemoRunRespDTO.builder()
-        .activityId(req.getActivityId())
-        .requestCount(req.getRequestCount())
+        .activityId(activityId)
+        .requestCount(reqCount)
         .acceptedCount(acceptedCount)
         .rejectedCount(rejectedCount)
-        .message("已触发 " + req.getRequestCount() + " 次演示请求，受理 " + acceptedCount + " 次")
+        .message("已触发 " + reqCount + " 次演示请求，受理 " + acceptedCount + " 次")
         .build();
   }
 

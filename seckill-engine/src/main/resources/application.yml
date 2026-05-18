@@ -43,4 +43,4 @@ logging:
 
 seckill:
   redis:
-    key-prefix: seckill:
+    key-prefix: "seckill:"
