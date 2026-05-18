@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { storage } from '../utils/storage';
 import { authApi } from '../api/auth';
+import { registerUnauthorizedHandler } from '../api/index';
 import { LoginRequest, RegisterRequest } from '../types/user';
 
 interface AuthState {
@@ -17,7 +18,13 @@ interface AuthState {
   clearError: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set) => {
+  // 注册 401 回调：同步清除 Zustand 状态
+  registerUnauthorizedHandler(() => {
+    set({ token: null, username: null, isAuthenticated: false });
+  });
+
+  return {
   token: storage.getToken(),
   username: storage.getUsername(),
   isAuthenticated: !!storage.getToken(),
@@ -76,4 +83,5 @@ export const useAuthStore = create<AuthState>((set) => ({
   clearError: () => {
     set({ error: null });
   },
-}));
+};
+});

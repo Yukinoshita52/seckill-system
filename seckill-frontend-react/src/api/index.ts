@@ -1,6 +1,12 @@
 import axios from 'axios';
 import { storage } from '../utils/storage';
 
+// 401 回调注册，避免循环依赖
+let onUnauthorized: (() => void) | null = null;
+export function registerUnauthorizedHandler(handler: () => void) {
+  onUnauthorized = handler;
+}
+
 const apiClient = axios.create({
   baseURL: '/api',
   timeout: 10000,
@@ -34,6 +40,15 @@ apiClient.interceptors.response.use(
     return data;
   },
   (error) => {
+    if (error.response?.status === 401) {
+      storage.clear();
+      onUnauthorized?.();
+      // 避免在登录页重复跳转
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
+      return Promise.reject(new Error('登录已过期，请重新登录'));
+    }
     if (error.message === 'Network Error') {
       return Promise.reject(new Error('网络连接失败，请检查网络'));
     }
