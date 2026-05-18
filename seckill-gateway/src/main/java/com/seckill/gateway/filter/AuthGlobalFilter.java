@@ -32,6 +32,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
       "/api/auth/register",
       "/api/activity/list",
       "/api/activity/",
+      "/api/demo/",
       "/doc.html",
       "/swagger-ui",
       "/v3/api-docs",
