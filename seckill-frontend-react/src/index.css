@@ -527,11 +527,36 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-display) !important; font-weigh
 }
 
 .hero-showcase {
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
-  gap: 28px;
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
   padding: 28px 0 56px;
+}
+
+/* Home scroll-snap sections */
+.home-snap-container {
+  scroll-snap-type: y proximity;
+}
+
+.home-snap-section {
+  scroll-snap-align: start;
+  min-height: calc(100vh - 160px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 0;
+}
+
+.home-section-inner {
+  width: 100%;
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.home-section-inner.section-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .hero-copy {
@@ -1163,6 +1188,36 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-display) !important; font-weigh
   color: var(--color-text-muted) !important;
 }
 
+/* Skeleton loading */
+.skeleton-line {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-2) 25%,
+    rgba(255, 255, 255, 0.06) 50%,
+    var(--color-surface-2) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Card fade-in transition (smoother than animation) */
+.card-fade-in {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-fade-in-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 /* Empty state */
 .empty-container {
   display: flex;
@@ -1217,10 +1272,6 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-display) !important; font-weigh
   .header-actions {
     width: 100%;
     justify-content: space-between;
-  }
-
-  .hero-showcase {
-    grid-template-columns: 1fr;
   }
 
   .hero-flow-inline,

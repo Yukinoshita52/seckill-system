@@ -1,33 +1,54 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Button, Card, Typography, Spin, Tag } from '@douyinfe/semi-ui';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Select, InputNumber } from '@douyinfe/semi-ui';
 import { useSeckillStore } from '../stores/useSeckillStore';
-import Countdown from '../components/Countdown';
-import StockProgress from '../components/StockProgress';
-import SeckillButton from '../components/SeckillButton';
 import { demoApi } from '../api/demo';
 import { DemoMetrics } from '../types/demo';
-import { formatPrice, getStatusText, getStatusTagType } from '../utils/format';
 
-const { Text } = Typography;
-const DEMO_REQUEST_COUNT = 100;
+function useActiveSection(sectionCount: number) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const refs = useRef<(HTMLElement | null)[]>([]);
+
+  useEffect(() => {
+    const observers: IntersectionObserver[] = [];
+    refs.current.forEach((el, i) => {
+      if (!el) return;
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+            setActiveIndex(i);
+          }
+        },
+        { threshold: 0.5 }
+      );
+      observer.observe(el);
+      observers.push(observer);
+    });
+    return () => observers.forEach((o) => o.disconnect());
+  }, [sectionCount]);
+
+  return { activeIndex, refs };
+}
 
 export default function Home() {
-  const navigate = useNavigate();
-  const { activities, loading, error, fetchActivities } = useSeckillStore();
+  const { activities, fetchActivities } = useSeckillStore();
+
+  const [demoRequestCount, setDemoRequestCount] = useState(100);
+  const [selectedActivityId, setSelectedActivityId] = useState<number | null>(null);
   const [demoMetrics, setDemoMetrics] = useState<DemoMetrics | null>(null);
   const [demoLoading, setDemoLoading] = useState(false);
   const [demoError, setDemoError] = useState<string | null>(null);
-  const [demoRunLoading, setDemoRunLoading] = useState<number | null>(null);
+  const [demoRunLoading, setDemoRunLoading] = useState(false);
   const [demoRunMessage, setDemoRunMessage] = useState<string | null>(null);
-  const activeCount = activities.filter((activity) => activity.status === 1).length;
-  const pendingCount = activities.filter((activity) => activity.status === 0).length;
-  const remainStock = activities.reduce((sum, activity) => sum + activity.remainStock, 0);
-  const finishedCount = activities.filter((activity) => activity.status === 2).length;
-  const demoActivity = useMemo(
-    () => activities.find((activity) => activity.status === 1) ?? activities[0] ?? null,
-    [activities]
-  );
+
+  const SECTION_COUNT = 4;
+  const { activeIndex, refs } = useActiveSection(SECTION_COUNT);
+
+  const demoActivity = useMemo(() => {
+    if (selectedActivityId != null) {
+      return activities.find((a) => a.id === selectedActivityId) ?? null;
+    }
+    return activities.find((a) => a.status === 1) ?? activities[0] ?? null;
+  }, [activities, selectedActivityId]);
 
   useEffect(() => {
     fetchActivities();
@@ -43,408 +64,383 @@ export default function Home() {
     let disposed = false;
     let intervalId: ReturnType<typeof setInterval> | undefined;
 
-    const loadDemoMetrics = async (silent = false) => {
+    const loadMetrics = async (silent = false) => {
       try {
-        if (!silent) {
-          setDemoLoading(true);
-        }
+        if (!silent) setDemoLoading(true);
         setDemoError(null);
-        const response = await demoApi.getMetrics(demoActivity.id);
-        if (!disposed) {
-          setDemoMetrics(response.data);
-        }
+        const res = await demoApi.getMetrics(demoActivity.id);
+        if (!disposed) setDemoMetrics(res.data);
       } catch (err) {
-        if (!disposed) {
-          setDemoError((err as Error).message);
-        }
+        if (!disposed) setDemoError((err as Error).message);
       } finally {
-        if (!disposed && !silent) {
-          setDemoLoading(false);
-        }
+        if (!disposed && !silent) setDemoLoading(false);
       }
     };
 
-    loadDemoMetrics();
-    intervalId = setInterval(() => {
-      void loadDemoMetrics(true);
-    }, 5000);
-
-    return () => {
-      disposed = true;
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    };
+    loadMetrics();
+    intervalId = setInterval(() => void loadMetrics(true), 5000);
+    return () => { disposed = true; if (intervalId) clearInterval(intervalId); };
   }, [demoActivity]);
 
-  const loadDemoMetricsOnce = async () => {
-    if (!demoActivity) {
-      return;
-    }
+  const loadMetricsOnce = async () => {
+    if (!demoActivity) return;
     try {
       setDemoError(null);
-      const response = await demoApi.getMetrics(demoActivity.id);
-      setDemoMetrics(response.data);
+      const res = await demoApi.getMetrics(demoActivity.id);
+      setDemoMetrics(res.data);
     } catch (err) {
       setDemoError((err as Error).message);
     }
   };
 
-  const handleSeckill = (id: number) => {
-    navigate(`/activity/${id}`);
-  };
-
-  const handleRunDemo = async (requestCount: number) => {
-    if (!demoActivity) {
-      return;
-    }
+  const handleRunDemo = async () => {
+    if (!demoActivity) return;
     try {
-      setDemoRunLoading(requestCount);
+      setDemoRunLoading(true);
       setDemoRunMessage(null);
       setDemoError(null);
-      const response = await demoApi.runDemo({
+      const res = await demoApi.runDemo({
         activityId: demoActivity.id,
-        requestCount,
+        requestCount: demoRequestCount,
       });
-      setDemoRunMessage(response.data.message);
-      await loadDemoMetricsOnce();
+      setDemoRunMessage(res.data.message);
+      await loadMetricsOnce();
     } catch (err) {
       setDemoError((err as Error).message);
     } finally {
-      setDemoRunLoading(null);
+      setDemoRunLoading(false);
     }
   };
 
   const stockConsumed = demoMetrics ? Math.max(demoMetrics.totalStock - demoMetrics.remainStock, 0) : null;
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
-        <Spin size="large" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="text-center" style={{ color: 'var(--color-accent)', padding: '48px 0', fontSize: '14px' }}>
-        {error}
-      </div>
-    );
-  }
-
-  if (activities.length === 0) {
-    return (
-      <div className="empty-container">
-        <svg className="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
-          <path d="M3 3h18v18H3V3z" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M3 9h18M9 21V9" strokeLinecap="round" />
-        </svg>
-        <div className="empty-title">暂无秒杀活动</div>
-        <div className="empty-desc">请前往管理后台创建秒杀活动</div>
-      </div>
-    );
-  }
+  const setRef = (index: number) => (el: HTMLElement | null) => { refs.current[index] = el; };
 
   return (
-    <div>
-      <section className="hero-showcase stagger-children">
-        <div className="hero-copy">
-          <div className="section-label">Resume Project / Architecture Showcase</div>
-          <h1 className="hero-title" style={{ marginBottom: '18px' }}>
-            面向简历展示的
-            <br />
-            <span className="hero-accent-text">高并发秒杀系统</span>
+    <div className="home-snap-container">
+
+      {/* Section 0: Hero */}
+      <section
+        ref={setRef(0)}
+        className="home-snap-section"
+      >
+        <div className={`home-section-inner ${activeIndex === 0 ? 'section-visible' : ''}`}>
+          <div className="section-label" style={{ marginBottom: '16px' }}>Seckill System / Architecture Demo</div>
+          <h1 style={{
+            fontFamily: 'var(--font-display)',
+            fontWeight: 800,
+            fontSize: 'clamp(36px, 5vw, 56px)',
+            lineHeight: 1.15,
+            color: 'var(--color-text)',
+            letterSpacing: '-0.03em',
+            margin: '0 0 20px',
+          }}>
+            高并发秒杀系统
           </h1>
-          <p className="hero-subtitle hero-copy-subtitle">
-            这个页面不是普通电商首页，而是把 Redis 分桶库存、四层过滤、RocketMQ 异步削峰和订单状态轮询直接展示给面试官看的系统演示页。
+          <p style={{
+            fontSize: '18px',
+            lineHeight: 1.7,
+            color: 'var(--color-text-secondary)',
+            maxWidth: '680px',
+            margin: '0 auto',
+          }}>
+            一个面向简历展示的完整秒杀系统，覆盖 Redis 分桶库存、Lua 原子扣减、RocketMQ 异步削峰和订单状态轮询。
           </p>
+        </div>
+      </section>
 
-          <div className="hero-pill-row">
-            <span className="hero-pill">Redis 分桶库存</span>
-            <span className="hero-pill">Lua 原子扣减</span>
-            <span className="hero-pill">RocketMQ 异步削峰</span>
-            <span className="hero-pill">Sentinel 限流</span>
+      {/* Section 1: Architecture Diagram */}
+      <section
+        ref={setRef(1)}
+        className="home-snap-section"
+      >
+        <div className={`home-section-inner ${activeIndex === 1 ? 'section-visible' : ''}`}>
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <div className="section-label" style={{ marginBottom: '12px' }}>Technical Architecture</div>
+            <h2 style={{
+              fontFamily: 'var(--font-display)',
+              fontWeight: 700,
+              fontSize: '28px',
+              color: 'var(--color-text)',
+              margin: 0,
+            }}>系统架构</h2>
           </div>
+          <div style={{
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
+            borderRadius: '20px',
+            padding: '48px 32px',
+            overflow: 'auto',
+          }}>
+            <svg viewBox="0 0 800 520" style={{ width: '100%', maxWidth: '800px', margin: '0 auto', display: 'block' }}>
+              {/* Layer 1: Client — widest */}
+              <rect x="100" y="10" width="600" height="64" rx="14" fill="#ff4d00" opacity="0.1" stroke="#ff4d00" strokeWidth="1.5"/>
+              <text x="400" y="38" textAnchor="middle" fill="#ff4d00" fontSize="16" fontWeight="700">Client</text>
+              <text x="400" y="58" textAnchor="middle" fill="#94a3b8" fontSize="12">浏览器 / 全量请求</text>
+              <text x="720" y="48" textAnchor="end" fill="#ff4d00" fontSize="11" fontWeight="600" opacity="0.7">100%</text>
 
-          <div className="hero-flow-inline">
-            <div className="hero-flow-step">
-              <span className="hero-flow-number">01</span>
-              <div>
-                <div className="hero-flow-title">四层过滤</div>
-                <div className="hero-flow-copy">活动状态、重复购买、总库存预检、入口限流。</div>
-              </div>
-            </div>
-            <div className="hero-flow-step">
-              <span className="hero-flow-number">02</span>
-              <div>
-                <div className="hero-flow-title">PENDING 受理</div>
-                <div className="hero-flow-copy">请求先返回排队中，避免同步阻塞。</div>
-              </div>
-            </div>
-            <div className="hero-flow-step">
-              <span className="hero-flow-number">03</span>
-              <div>
-                <div className="hero-flow-title">MQ 异步扣库存</div>
-                <div className="hero-flow-copy">消费者执行 Lua 扣减并推进订单状态。</div>
-              </div>
-            </div>
-          </div>
+              {/* Funnel sides */}
+              <path d="M100 74 L160 108 L640 108 L700 74" fill="none" stroke="var(--color-border)" strokeWidth="1" opacity="0.4"/>
+              <line x1="400" y1="74" x2="400" y2="108" stroke="var(--color-border)" strokeWidth="1.5" markerEnd="url(#arrowhead)"/>
 
-          <div className="hero-cta-row">
-            <Button
-              type="primary"
-              theme="solid"
-              className="hero-primary-button"
-              onClick={() => document.getElementById('activity-grid')?.scrollIntoView({ behavior: 'smooth' })}
-            >
-              查看活动列表
-            </Button>
-            <Button type="secondary" className="hero-secondary-button" onClick={() => navigate('/login')}>
-              登录体验完整流程
-            </Button>
-          </div>
+              {/* Layer 2: Gateway */}
+              <rect x="160" y="108" width="480" height="64" rx="14" fill="#3b82f6" opacity="0.1" stroke="#3b82f6" strokeWidth="1.5"/>
+              <text x="400" y="136" textAnchor="middle" fill="#93c5fd" fontSize="15" fontWeight="700">Spring Cloud Gateway</text>
+              <text x="400" y="156" textAnchor="middle" fill="#94a3b8" fontSize="11">JWT 鉴权 / Sentinel 限流 / 路由转发</text>
+              <text x="660" y="146" textAnchor="end" fill="#3b82f6" fontSize="11" fontWeight="600" opacity="0.7">限流后 ↓</text>
 
-          <div className="hero-stats hero-stats-left">
-            <div className="hero-stat-card hero-stat-card-compact">
-              <span className="hero-stat-value">{activities.length}</span>
-              <span className="hero-stat-label">活动总数</span>
-            </div>
-            <div className="hero-stat-card hero-stat-card-compact">
-              <span className="hero-stat-value">{activeCount}</span>
-              <span className="hero-stat-label">进行中活动</span>
-            </div>
-            <div className="hero-stat-card hero-stat-card-compact">
-              <span className="hero-stat-value">{remainStock}</span>
-              <span className="hero-stat-label">剩余库存</span>
-            </div>
-            <div className="hero-stat-card hero-stat-card-compact">
-              <span className="hero-stat-value">{pendingCount + finishedCount}</span>
-              <span className="hero-stat-label">非进行中活动</span>
-            </div>
+              {/* Funnel sides */}
+              <path d="M160 172 L220 206 L580 206 L640 172" fill="none" stroke="var(--color-border)" strokeWidth="1" opacity="0.4"/>
+              <line x1="400" y1="172" x2="400" y2="206" stroke="var(--color-border)" strokeWidth="1.5" markerEnd="url(#arrowhead)"/>
+
+              {/* Layer 3: 4-layer validation */}
+              <rect x="220" y="206" width="360" height="64" rx="14" fill="#f97316" opacity="0.1" stroke="#f97316" strokeWidth="1.5"/>
+              <text x="400" y="234" textAnchor="middle" fill="#fdba74" fontSize="15" fontWeight="700">四层过滤</text>
+              <text x="400" y="254" textAnchor="middle" fill="#94a3b8" fontSize="11">活动状态 / 用户去重 / 库存预检 / 入口限流</text>
+
+              {/* Funnel sides */}
+              <path d="M220 270 L270 304 L530 304 L580 270" fill="none" stroke="var(--color-border)" strokeWidth="1" opacity="0.4"/>
+              <line x1="400" y1="270" x2="400" y2="304" stroke="var(--color-border)" strokeWidth="1.5" markerEnd="url(#arrowhead)"/>
+
+              {/* Layer 4: Redis Lua deduction */}
+              <rect x="270" y="304" width="260" height="64" rx="14" fill="#ef4444" opacity="0.1" stroke="#ef4444" strokeWidth="1.5"/>
+              <text x="400" y="332" textAnchor="middle" fill="#fca5a5" fontSize="15" fontWeight="700">Redis Lua 原子扣减</text>
+              <text x="400" y="352" textAnchor="middle" fill="#94a3b8" fontSize="11">分桶库存 DECR / 去重集合 SADD</text>
+
+              {/* Funnel sides */}
+              <path d="M270 368 L320 402 L480 402 L530 368" fill="none" stroke="var(--color-border)" strokeWidth="1" opacity="0.4"/>
+              <line x1="400" y1="368" x2="400" y2="402" stroke="var(--color-border)" strokeWidth="1.5" markerEnd="url(#arrowhead)"/>
+              <text x="540" y="390" textAnchor="start" fill="#ef4444" fontSize="11" fontWeight="600" opacity="0.7">仅成功 ↓</text>
+
+              {/* Layer 5: MQ + DB — narrowest */}
+              <rect x="320" y="402" width="160" height="64" rx="14" fill="#a855f7" opacity="0.1" stroke="#a855f7" strokeWidth="1.5"/>
+              <text x="400" y="430" textAnchor="middle" fill="#c4b5fd" fontSize="14" fontWeight="700">RocketMQ</text>
+              <text x="400" y="450" textAnchor="middle" fill="#94a3b8" fontSize="11">异步落库 MySQL</text>
+
+              {/* Side: MQ → DB detail */}
+              <line x1="480" y1="434" x2="540" y2="434" stroke="var(--color-border)" strokeWidth="1.5" markerEnd="url(#arrowhead)"/>
+              <rect x="540" y="410" width="140" height="48" rx="10" fill="#22c55e" opacity="0.1" stroke="#22c55e" strokeWidth="1"/>
+              <text x="610" y="432" textAnchor="middle" fill="#86efac" fontSize="13" fontWeight="600">MySQL</text>
+              <text x="610" y="450" textAnchor="middle" fill="#94a3b8" fontSize="10">订单 / 扣减日志</text>
+
+              {/* Polling arrow: Engine back to Client */}
+              <path d="M270 434 Q 40 434 40 42 Q 40 10 100 42" fill="none" stroke="var(--color-accent)" strokeWidth="1.2" strokeDasharray="6 4"/>
+              <text x="28" y="240" textAnchor="middle" fill="var(--color-accent)" fontSize="10" transform="rotate(-90 28 240)">状态轮询</text>
+
+              <defs>
+                <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                  <polygon points="0 0, 8 3, 0 6" fill="var(--color-text-muted)"/>
+                </marker>
+              </defs>
+            </svg>
           </div>
         </div>
+      </section>
 
-        <div className="hero-board animate-fade-in-up">
-          <div className="hero-demo-card hero-demo-card-primary">
-            <div className="hero-demo-copy">
-              <div className="hero-demo-topline">
-                <div className="section-label" style={{ marginBottom: '10px' }}>
-                  {demoMetrics ? `实时演示 / ${demoMetrics.activityName}` : '实时演示'}
-                </div>
-                <span className="live-dot">DEMO CONSOLE</span>
+      {/* Section 2: Order State Flow */}
+      <section
+        ref={setRef(2)}
+        className="home-snap-section"
+      >
+        <div className={`home-section-inner ${activeIndex === 2 ? 'section-visible' : ''}`}>
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <div className="section-label" style={{ marginBottom: '12px' }}>Order Lifecycle</div>
+            <h2 style={{
+              fontFamily: 'var(--font-display)',
+              fontWeight: 700,
+              fontSize: '28px',
+              color: 'var(--color-text)',
+              margin: 0,
+            }}>订单状态流转</h2>
+          </div>
+          <div style={{
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
+            borderRadius: '20px',
+            padding: '48px 32px',
+            overflow: 'auto',
+          }}>
+            <svg viewBox="0 0 780 200" style={{ width: '100%', maxWidth: '780px', margin: '0 auto', display: 'block' }}>
+              {/* PENDING */}
+              <rect x="20" y="40" width="150" height="64" rx="14" fill="#f59e0b" opacity="0.15" stroke="#f59e0b" strokeWidth="1.5"/>
+              <text x="95" y="68" textAnchor="middle" fill="#fbbf24" fontSize="15" fontWeight="700">PENDING</text>
+              <text x="95" y="88" textAnchor="middle" fill="#94a3b8" fontSize="11">请求已受理</text>
+
+              <line x1="170" y1="72" x2="230" y2="72" stroke="var(--color-text-muted)" strokeWidth="1.5" markerEnd="url(#arrow)"/>
+              <text x="200" y="62" textAnchor="middle" fill="#64748b" fontSize="10">MQ 消费</text>
+
+              {/* UNPAID */}
+              <rect x="230" y="40" width="150" height="64" rx="14" fill="#22c55e" opacity="0.15" stroke="#22c55e" strokeWidth="1.5"/>
+              <text x="305" y="68" textAnchor="middle" fill="#4ade80" fontSize="15" fontWeight="700">UNPAID</text>
+              <text x="305" y="88" textAnchor="middle" fill="#94a3b8" fontSize="11">扣库存成功</text>
+
+              <line x1="380" y1="72" x2="440" y2="72" stroke="var(--color-text-muted)" strokeWidth="1.5" markerEnd="url(#arrow)"/>
+              <text x="410" y="62" textAnchor="middle" fill="#64748b" fontSize="10">支付</text>
+
+              {/* SUCCESS */}
+              <rect x="440" y="40" width="150" height="64" rx="14" fill="#3b82f6" opacity="0.15" stroke="#3b82f6" strokeWidth="1.5"/>
+              <text x="515" y="68" textAnchor="middle" fill="#60a5fa" fontSize="15" fontWeight="700">SUCCESS</text>
+              <text x="515" y="88" textAnchor="middle" fill="#94a3b8" fontSize="11">订单完成</text>
+
+              {/* PENDING → FAILED */}
+              <path d="M95 104 L95 155 L215 155 L215 125" fill="none" stroke="#ef4444" strokeWidth="1.5" markerEnd="url(#arrow-red)"/>
+              <text x="155" y="148" textAnchor="middle" fill="#ef4444" fontSize="10">库存不足 / MQ 异常</text>
+
+              {/* FAILED */}
+              <rect x="140" y="125" width="150" height="64" rx="14" fill="#ef4444" opacity="0.15" stroke="#ef4444" strokeWidth="1.5"/>
+              <text x="215" y="153" textAnchor="middle" fill="#f87171" fontSize="15" fontWeight="700">FAILED</text>
+              <text x="215" y="173" textAnchor="middle" fill="#94a3b8" fontSize="11">扣减失败</text>
+
+              {/* UNPAID → TIMEOUT */}
+              <path d="M305 104 L305 155 L425 155 L425 125" fill="none" stroke="#f97316" strokeWidth="1.5" markerEnd="url(#arrow-orange)"/>
+              <text x="365" y="148" textAnchor="middle" fill="#f97316" fontSize="10">超时未支付</text>
+
+              {/* TIMEOUT */}
+              <rect x="350" y="125" width="150" height="64" rx="14" fill="#f97316" opacity="0.15" stroke="#f97316" strokeWidth="1.5"/>
+              <text x="425" y="153" textAnchor="middle" fill="#fb923c" fontSize="15" fontWeight="700">TIMEOUT</text>
+              <text x="425" y="173" textAnchor="middle" fill="#94a3b8" fontSize="11">订单超时</text>
+
+              {/* Legend */}
+              <rect x="620" y="40" width="140" height="150" rx="12" fill="none" stroke="var(--color-border)" strokeWidth="1"/>
+              <text x="690" y="62" textAnchor="middle" fill="var(--color-text-muted)" fontSize="11" fontWeight="600">状态说明</text>
+              <circle cx="640" cy="82" r="5" fill="#f59e0b" opacity="0.6"/><text x="652" y="86" fill="#94a3b8" fontSize="10">请求受理排队中</text>
+              <circle cx="640" cy="104" r="5" fill="#22c55e" opacity="0.6"/><text x="652" y="108" fill="#94a3b8" fontSize="10">Lua 扣库存成功</text>
+              <circle cx="640" cy="126" r="5" fill="#3b82f6" opacity="0.6"/><text x="652" y="130" fill="#94a3b8" fontSize="10">用户支付完成</text>
+              <circle cx="640" cy="148" r="5" fill="#ef4444" opacity="0.6"/><text x="652" y="152" fill="#94a3b8" fontSize="10">库存不足扣减失败</text>
+              <circle cx="640" cy="170" r="5" fill="#f97316" opacity="0.6"/><text x="652" y="174" fill="#94a3b8" fontSize="10">超时未支付自动关闭</text>
+
+              <defs>
+                <marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                  <polygon points="0 0, 8 3, 0 6" fill="var(--color-text-muted)"/>
+                </marker>
+                <marker id="arrow-red" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                  <polygon points="0 0, 8 3, 0 6" fill="#ef4444"/>
+                </marker>
+                <marker id="arrow-orange" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                  <polygon points="0 0, 8 3, 0 6" fill="#f97316"/>
+                </marker>
+              </defs>
+            </svg>
+          </div>
+        </div>
+      </section>
+
+      {/* Section 3: Demo */}
+      <section
+        ref={setRef(3)}
+        className="home-snap-section"
+      >
+        <div className={`home-section-inner ${activeIndex === 3 ? 'section-visible' : ''}`}>
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <div className="section-label" style={{ marginBottom: '12px' }}>Live Demo</div>
+            <h2 style={{
+              fontFamily: 'var(--font-display)',
+              fontWeight: 700,
+              fontSize: '28px',
+              color: 'var(--color-text)',
+              margin: 0,
+            }}>一键演示真实链路</h2>
+            <p style={{
+              fontSize: '16px',
+              color: 'var(--color-text-secondary)',
+              margin: '12px 0 0',
+              maxWidth: '600px',
+              marginLeft: 'auto',
+              marginRight: 'auto',
+            }}>
+              批量提交真实秒杀请求，展示从请求受理到 MQ 异步扣库存的完整链路。
+            </p>
+          </div>
+
+          <div style={{
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
+            borderRadius: '20px',
+            padding: '32px',
+            maxWidth: '640px',
+            margin: '0 auto',
+            width: '100%',
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+              <Select
+                placeholder="选择演示活动（默认自动选进行中）"
+                optionList={activities.map((a) => ({ label: a.activityName, value: a.id }))}
+                value={selectedActivityId ?? undefined}
+                onChange={(v) => setSelectedActivityId(v as number)}
+                style={{ width: '100%' }}
+              />
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <InputNumber
+                  min={1}
+                  max={1000}
+                  step={10}
+                  value={demoRequestCount}
+                  onChange={(v) => setDemoRequestCount(Number(v))}
+                  style={{ flex: 1 }}
+                />
+                <span style={{ fontSize: '14px', color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>次请求</span>
               </div>
-              <h3 className="hero-demo-title">一键演示真实链路效果</h3>
-              <p className="hero-demo-desc">
-                当前触发的是真实秒杀业务链路，不是压测模式。点击后会批量提交一组真实请求，用于展示订单创建、MQ 异步处理、库存扣减和状态流转。
-              </p>
             </div>
-            <div className="demo-metrics">
-              <div className="demo-metric-card">
-                <span className="demo-metric-label">本轮触发数</span>
-                <span className="demo-metric-value">
-                  {DEMO_REQUEST_COUNT}
-                </span>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
+              <div style={{ background: 'var(--color-surface-2)', borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '6px', letterSpacing: '0.05em', textTransform: 'uppercase' }}>触发数</div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '24px', fontWeight: 700, color: 'var(--color-text)' }}>{demoRequestCount}</div>
               </div>
-              <div className="demo-metric-card">
-                <span className="demo-metric-label">订单成功数</span>
-                <span className="demo-metric-value">
+              <div style={{ background: 'var(--color-surface-2)', borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '6px', letterSpacing: '0.05em', textTransform: 'uppercase' }}>成功数</div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '24px', fontWeight: 700, color: 'var(--color-text)' }}>
                   {demoLoading && !demoMetrics ? '--' : demoMetrics?.successCount ?? '--'}
-                </span>
+                </div>
               </div>
-              <div className="demo-metric-card">
-                <span className="demo-metric-label">库存消耗</span>
-                <span className="demo-metric-value">
+              <div style={{ background: 'var(--color-surface-2)', borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '6px', letterSpacing: '0.05em', textTransform: 'uppercase' }}>库存消耗</div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '24px', fontWeight: 700, color: 'var(--color-text)' }}>
                   {demoLoading && !demoMetrics ? '--' : stockConsumed ?? '--'}
-                </span>
+                </div>
               </div>
             </div>
-            <div className="demo-button-row">
-              <button
-                className="demo-button demo-button-active demo-button-primary"
-                type="button"
-                onClick={() => void handleRunDemo(DEMO_REQUEST_COUNT)}
-                disabled={demoRunLoading !== null}
-              >
-                {demoRunLoading === DEMO_REQUEST_COUNT ? '触发中...' : '一键演示真实链路效果'}
-              </button>
-            </div>
-            <div className="demo-placeholder">
-              <span className="demo-placeholder-label">LIVE STATUS FLOW</span>
+
+            <button
+              className="demo-button demo-button-active demo-button-primary"
+              type="button"
+              onClick={() => void handleRunDemo()}
+              disabled={demoRunLoading}
+              style={{ width: '100%', height: '52px', fontSize: '16px' }}
+            >
+              {demoRunLoading ? '触发中...' : `触发 ${demoRequestCount} 次演示请求`}
+            </button>
+
+            <div style={{ marginTop: '20px' }}>
               {demoRunMessage ? (
-                <span className="demo-placeholder-text">{demoRunMessage}</span>
+                <div style={{ fontSize: '14px', color: '#4ade80', marginBottom: '8px' }}>{demoRunMessage}</div>
               ) : null}
               {demoError ? (
-                <span className="demo-placeholder-text">演示数据加载失败：{demoError}</span>
+                <div style={{ fontSize: '14px', color: '#f87171', marginBottom: '8px' }}>加载失败：{demoError}</div>
               ) : demoMetrics ? (
-                <div className="demo-status-list">
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                   {demoMetrics.statusFlow.map((item) => (
-                    <div key={item.status} className="demo-status-item">
-                      <span className="demo-status-name">{item.status}</span>
-                      <span className="demo-status-count">{item.count}</span>
-                    </div>
+                    <span key={item.status} style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '13px',
+                      color: 'var(--color-text-secondary)',
+                      background: 'var(--color-surface-2)',
+                      padding: '6px 12px',
+                      borderRadius: '8px',
+                      border: '1px solid var(--color-border)',
+                    }}>
+                      {item.status}: {item.count}
+                    </span>
                   ))}
                 </div>
               ) : (
-                <span className="demo-placeholder-text">正在等待演示数据返回。</span>
+                <div style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>选择活动后点击触发按钮开始演示。</div>
               )}
-              <span className="demo-placeholder-note">说明：该按钮用于展示真实业务链路效果，不作为压测结果口径。</span>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="feature-strip">
-        <div className="feature-strip-card">
-          <div className="feature-strip-title">库存热点治理</div>
-          <div className="feature-strip-desc">Redis 分桶库存按用户路由，减少单 key 热点写压力。</div>
-        </div>
-        <div className="feature-strip-card">
-          <div className="feature-strip-title">异步削峰填谷</div>
-          <div className="feature-strip-desc">请求先受理再排队处理，前端轮询展示最终状态。</div>
-        </div>
-        <div className="feature-strip-card">
-          <div className="feature-strip-title">工程权衡可讲</div>
-          <div className="feature-strip-desc">当前桶空即失败，未做跨桶查找，适合面试中主动解释 tradeoff。</div>
-        </div>
-      </section>
-
-      <div className="section-shell" id="activity-grid">
-        <div className="section-shell-header">
-          <div>
-            <div className="section-label">精选活动</div>
-            <h2 className="section-shell-title">本场秒杀列表</h2>
-          </div>
-          <div className="section-shell-note">点击卡片查看详情、倒计时、库存进度与下单状态轮询</div>
-        </div>
-        <div className="activity-showcase-grid">
-          <div className="activity-card-grid stagger-children">
-            {activities.map((activity, i) => (
-              <div
-                key={activity.id}
-                className="animate-fade-in-up"
-                style={{ animationDelay: `${0.1 + i * 0.07}s`, cursor: 'pointer' }}
-                onClick={() => navigate(`/activity/${activity.id}`)}
-              >
-                <Card
-                  className="card-glow"
-                  style={{ overflow: 'visible' }}
-                  bodyStyle={{
-                    padding: '28px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '20px',
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ flex: 1 }}>
-                      <div
-                        style={{
-                          fontFamily: 'var(--font-display)',
-                          fontWeight: 700,
-                          fontSize: '20px',
-                          color: 'var(--color-text)',
-                          lineHeight: 1.3,
-                          letterSpacing: '-0.01em',
-                          marginBottom: '6px',
-                        }}
-                      >
-                        {activity.activityName}
-                      </div>
-                      <Text type="secondary" style={{ fontSize: '14px', color: 'var(--color-text-secondary)' }}>
-                        {activity.goodsName}
-                      </Text>
-                    </div>
-                    <Tag color={getStatusTagType(activity.status)} style={{ flexShrink: 0, marginLeft: '12px', marginTop: '2px' }}>
-                      {getStatusText(activity.status)}
-                    </Tag>
-                  </div>
-
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'baseline',
-                      gap: '16px',
-                      padding: '20px 0',
-                      borderTop: '1px solid var(--color-border)',
-                      borderBottom: '1px solid var(--color-border)',
-                    }}
-                  >
-                    <span className="price-tag" style={{ fontSize: '36px' }}>
-                      {formatPrice(activity.seckillPrice)}
-                    </span>
-                    <span
-                      style={{
-                        fontFamily: 'var(--font-mono)',
-                        fontSize: '15px',
-                        color: 'var(--color-text-muted)',
-                        textDecoration: 'line-through',
-                      }}
-                    >
-                      {formatPrice(activity.originalPrice)}
-                    </span>
-                    <span
-                      style={{
-                        marginLeft: 'auto',
-                        fontSize: '12px',
-                        fontFamily: 'var(--font-mono)',
-                        color: 'var(--color-accent)',
-                        background: 'rgba(255,77,0,0.08)',
-                        padding: '4px 10px',
-                        borderRadius: '4px',
-                        border: '1px solid rgba(255,77,0,0.2)',
-                      }}
-                    >
-                      节省 {formatPrice(activity.originalPrice - activity.seckillPrice)}
-                    </span>
-                  </div>
-
-                  <div>
-                    <StockProgress totalStock={activity.totalStock} remainStock={activity.remainStock} />
-                  </div>
-
-                  {activity.status === 0 && (
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '8px',
-                        padding: '14px',
-                        background: 'var(--color-surface-2)',
-                        borderRadius: '10px',
-                        border: '1px solid var(--color-border)',
-                      }}
-                    >
-                      <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', letterSpacing: '0.05em' }}>距开始</span>
-                      <Countdown targetTime={activity.startTime} />
-                    </div>
-                  )}
-
-                  <div onClick={(e) => e.stopPropagation()}>
-                    <SeckillButton activity={activity} onSeckill={handleSeckill} />
-                  </div>
-                </Card>
-              </div>
-            ))}
-          </div>
-          <div className="activity-side-panel">
-            <div className="activity-side-card">
-              <div className="section-label">系统说明</div>
-              <h3 className="activity-side-title">这组活动用于展示真实秒杀链路</h3>
-              <p className="activity-side-copy">活动详情页会展示库存进度、倒计时、下单结果和订单状态轮询，适合在面试时完整演示一次请求如何进入系统并得到最终结果。</p>
-            </div>
-            <div className="activity-side-card">
-              <div className="section-label">状态流转</div>
-              <div className="activity-state-list">
-                <div className="activity-state-item"><span className="activity-state-dot pending" />PENDING: 请求受理，排队处理中</div>
-                <div className="activity-state-item"><span className="activity-state-dot success" />UNPAID: Lua 扣库存成功，订单待支付</div>
-                <div className="activity-state-item"><span className="activity-state-dot fail" />FAILED: 扣库存失败或消息处理异常</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

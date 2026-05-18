@@ -5,6 +5,7 @@ import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const Home = lazy(() => import('./pages/Home'));
+const Activities = lazy(() => import('./pages/Activities'));
 const ActivityDetail = lazy(() => import('./pages/ActivityDetail'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
@@ -36,6 +37,14 @@ export default function AppRoutes() {
           element={
             <Layout>
               <ActivityDetail />
+            </Layout>
+          }
+        />
+        <Route
+          path="/activities"
+          element={
+            <Layout>
+              <Activities />
             </Layout>
           }
         />
