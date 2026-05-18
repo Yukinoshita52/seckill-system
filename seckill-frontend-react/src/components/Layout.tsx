@@ -15,8 +15,6 @@ export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const { isAuthenticated, username, logout } = useAuthStore();
 
-  const isAdmin = location.pathname.startsWith('/admin');
-
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -48,12 +46,9 @@ export default function Layout({ children }: LayoutProps) {
               onSelect={({ selectedKeys }) => navigate(selectedKeys[0] as string)}
               items={[
                 { itemKey: '/', text: '首页', icon: <IconHome /> },
-                ...(isAdmin
-                  ? [
-                      { itemKey: '/admin', text: '仪表盘', icon: <IconSetting /> },
-                      { itemKey: '/admin/activities', text: '活动管理', icon: <IconSetting /> },
-                    ]
-                  : []),
+                { itemKey: '/activities', text: '活动列表', icon: <IconHome /> },
+                { itemKey: '/admin', text: '仪表盘', icon: <IconSetting /> },
+                { itemKey: '/admin/activities', text: '活动管理', icon: <IconSetting /> },
               ]}
             />
           </div>

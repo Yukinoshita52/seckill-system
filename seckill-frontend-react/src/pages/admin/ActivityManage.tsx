@@ -21,16 +21,18 @@ const defaultFormValues: ActivityCreateRequest = {
 export default function ActivityManage() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [createVisible, setCreateVisible] = useState(false);
   const formApiRef = useRef<{ submitForm: () => void } | null>(null);
 
   const fetchActivities = async () => {
     setLoading(true);
+    setError(null);
     try {
       const response = await activityApi.getAdminActivities();
       setActivities(response.data || []);
-    } catch (error) {
-      Toast.error('加载活动列表失败');
+    } catch (err) {
+      setError((err as Error).message);
     } finally {
       setLoading(false);
     }
@@ -107,6 +109,19 @@ export default function ActivityManage() {
           新建活动
         </Button>
       </div>
+
+      {error && (
+        <div style={{
+          padding: '16px 20px',
+          background: 'rgba(239, 68, 68, 0.08)',
+          border: '1px solid rgba(239, 68, 68, 0.2)',
+          borderRadius: '12px',
+          color: '#f87171',
+          fontSize: '14px',
+        }}>
+          {error}
+        </div>
+      )}
 
       <Table columns={columns} dataSource={activities} loading={loading} rowKey="id" />
 
