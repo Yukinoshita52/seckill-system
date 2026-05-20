@@ -10,4 +10,16 @@ export const orderApi = {
   getOrderStatus(orderNo: string): Promise<ApiResponse<OrderStatusResponse>> {
     return apiClient.get(`/order/status/${orderNo}`);
   },
+
+  payOrder(orderNo: string): Promise<ApiResponse<void>> {
+    return apiClient.post(`/order/pay/${orderNo}`);
+  },
+
+  cancelOrder(orderNo: string): Promise<ApiResponse<void>> {
+    return apiClient.post(`/order/cancel/${orderNo}`);
+  },
+
+  listOrders(): Promise<ApiResponse<OrderStatusResponse[]>> {
+    return apiClient.get('/order/list');
+  },
 };

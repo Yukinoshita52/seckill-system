@@ -6,7 +6,7 @@ import com.seckill.common.dao.mapper.SeckillOrderMapper;
 import com.seckill.engine.dto.req.SeckillOrderReqDTO;
 import com.seckill.engine.dto.resp.SeckillOrderRespDTO;
 import com.seckill.engine.mq.OrderMessage;
-import com.seckill.engine.mq.SeckillOrderProducer;
+import com.seckill.engine.mq.producer.SeckillOrderProducer;
 import com.seckill.engine.service.SeckillService;
 import com.seckill.engine.service.chain.SeckillChainContext;
 import com.seckill.engine.service.chain.SeckillChainExecutor;

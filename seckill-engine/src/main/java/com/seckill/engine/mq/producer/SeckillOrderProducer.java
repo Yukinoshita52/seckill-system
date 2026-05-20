@@ -1,5 +1,6 @@
-package com.seckill.engine.mq;
+package com.seckill.engine.mq.producer;
 
+import com.seckill.engine.mq.OrderMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;

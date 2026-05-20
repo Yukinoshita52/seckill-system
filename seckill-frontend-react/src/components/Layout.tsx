@@ -54,6 +54,7 @@ export default function Layout({ children }: LayoutProps) {
                 { itemKey: '/activities', text: '活动列表', icon: <IconHome /> },
                 { itemKey: '/admin', text: '仪表盘', icon: <IconSetting /> },
                 { itemKey: '/admin/activities', text: '活动管理', icon: <IconSetting /> },
+                { itemKey: '/orders', text: '我的订单', icon: <IconSetting /> },
               ]}
             />
           </div>

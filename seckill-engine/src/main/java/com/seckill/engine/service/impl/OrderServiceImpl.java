@@ -1,13 +1,17 @@
 package com.seckill.engine.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.seckill.common.dao.entity.SeckillActivityDO;
 import com.seckill.common.dao.entity.SeckillOrderDO;
 import com.seckill.common.dao.mapper.SeckillActivityMapper;
 import com.seckill.common.dao.mapper.SeckillOrderMapper;
 import com.seckill.engine.dto.resp.OrderStatusRespDTO;
 import com.seckill.engine.service.OrderService;
+import com.seckill.engine.service.StockService;
 import com.seckill.framework.exception.ClientException;
+import java.time.LocalDateTime;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,8 +21,13 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
+  private static final int STATUS_UNPAID = 1;
+  private static final int STATUS_SUCCESS = 2;
+  private static final int STATUS_FAILED = 3;
+
   private final SeckillOrderMapper orderMapper;
   private final SeckillActivityMapper activityMapper;
+  private final StockService stockService;
 
   @Override
   public OrderStatusRespDTO queryOrderStatus(String orderNo) {
@@ -37,6 +46,83 @@ public class OrderServiceImpl implements OrderService {
         .seckillPrice(order.getSeckillPrice())
         .goodsName(goodsName)
         .build();
+  }
+
+  @Override
+  public void payOrder(String orderNo, Long userId) {
+    SeckillOrderDO order = orderMapper.selectOne(
+        new LambdaQueryWrapper<SeckillOrderDO>().eq(SeckillOrderDO::getOrderNo, orderNo));
+    if (order == null) {
+      throw new ClientException("A000100", "订单不存在");
+    }
+    if (!order.getUserId().equals(userId)) {
+      throw new ClientException("A000500", "无权限操作此订单");
+    }
+    if (order.getStatus() != STATUS_UNPAID) {
+      throw new ClientException("A000400", "订单状态不允许支付");
+    }
+
+    int affected = orderMapper.update(null,
+        new LambdaUpdateWrapper<SeckillOrderDO>()
+            .eq(SeckillOrderDO::getOrderNo, orderNo)
+            .eq(SeckillOrderDO::getStatus, STATUS_UNPAID)
+            .eq(SeckillOrderDO::getUserId, userId)
+            .set(SeckillOrderDO::getStatus, STATUS_SUCCESS)
+            .set(SeckillOrderDO::getPayTime, LocalDateTime.now()));
+
+    if (affected == 0) {
+      throw new ClientException("A000400", "订单状态已变更，支付失败");
+    }
+    log.info("订单支付成功: orderNo={}, userId={}", orderNo, userId);
+  }
+
+  @Override
+  public void cancelOrder(String orderNo, Long userId) {
+    SeckillOrderDO order = orderMapper.selectOne(
+        new LambdaQueryWrapper<SeckillOrderDO>().eq(SeckillOrderDO::getOrderNo, orderNo));
+    if (order == null) {
+      throw new ClientException("A000100", "订单不存在");
+    }
+    if (!order.getUserId().equals(userId)) {
+      throw new ClientException("A000500", "无权限操作此订单");
+    }
+    if (order.getStatus() != STATUS_UNPAID) {
+      throw new ClientException("A000400", "订单状态不允许取消");
+    }
+
+    int affected = orderMapper.update(null,
+        new LambdaUpdateWrapper<SeckillOrderDO>()
+            .eq(SeckillOrderDO::getOrderNo, orderNo)
+            .eq(SeckillOrderDO::getStatus, STATUS_UNPAID)
+            .eq(SeckillOrderDO::getUserId, userId)
+            .set(SeckillOrderDO::getStatus, STATUS_FAILED));
+
+    if (affected == 0) {
+      throw new ClientException("A000400", "订单状态已变更，取消失败");
+    }
+
+    // 回补 Redis 库存
+    stockService.compensateStock(order.getActivityId(), userId, order.getBucketIndex());
+    log.info("订单已取消: orderNo={}, userId={}", orderNo, userId);
+  }
+
+  @Override
+  public List<OrderStatusRespDTO> listByUser(Long userId) {
+    List<SeckillOrderDO> orders = orderMapper.selectList(
+        new LambdaQueryWrapper<SeckillOrderDO>()
+            .eq(SeckillOrderDO::getUserId, userId)
+            .orderByDesc(SeckillOrderDO::getCreateTime));
+
+    return orders.stream().map(order -> {
+      SeckillActivityDO activity = activityMapper.selectById(order.getActivityId());
+      String goodsName = activity != null ? activity.getGoodsName() : "";
+      return OrderStatusRespDTO.builder()
+          .orderNo(order.getOrderNo())
+          .status(mapStatus(order.getStatus()))
+          .seckillPrice(order.getSeckillPrice())
+          .goodsName(goodsName)
+          .build();
+    }).toList();
   }
 
   private String mapStatus(Integer status) {

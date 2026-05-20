@@ -6,6 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 const Home = lazy(() => import('./pages/Home'));
 const Activities = lazy(() => import('./pages/Activities'));
+const MyOrders = lazy(() => import('./pages/MyOrders'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const Dashboard = lazy(() => import('./pages/admin/Dashboard'));
@@ -51,6 +52,16 @@ export default function AppRoutes() {
         >
           <Route index element={<Dashboard />} />
           <Route path="activities" element={<ActivityManage />} />
+        </Route>
+        <Route
+          path="/orders"
+          element={
+            <Layout>
+              <ProtectedRoute />
+            </Layout>
+          }
+        >
+          <Route index element={<MyOrders />} />
         </Route>
       </Routes>
     </Suspense>
