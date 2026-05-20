@@ -1,5 +1,7 @@
 package com.seckill.engine.service.impl;
 
+import static com.seckill.common.constant.RedisKeyConstants.orderStatusKey;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.seckill.common.dao.entity.SeckillActivityDO;
@@ -9,11 +11,14 @@ import com.seckill.common.dao.mapper.SeckillOrderMapper;
 import com.seckill.engine.dto.resp.OrderStatusRespDTO;
 import com.seckill.engine.service.OrderService;
 import com.seckill.engine.service.StockService;
+import com.alibaba.fastjson2.JSON;
 import com.seckill.framework.exception.ClientException;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -29,9 +34,16 @@ public class OrderServiceImpl implements OrderService {
   private final SeckillOrderMapper orderMapper;
   private final SeckillActivityMapper activityMapper;
   private final StockService stockService;
+  private final StringRedisTemplate stringRedisTemplate;
 
   @Override
   public OrderStatusRespDTO queryOrderStatus(String orderNo) {
+    String cacheKey = orderStatusKey(orderNo);
+    String cached = stringRedisTemplate.opsForValue().get(cacheKey);
+    if (cached != null) {
+      return JSON.parseObject(cached, OrderStatusRespDTO.class);
+    }
+
     SeckillOrderDO order = orderMapper.selectOne(
         new LambdaQueryWrapper<SeckillOrderDO>().eq(SeckillOrderDO::getOrderNo, orderNo));
     if (order == null) {
@@ -41,12 +53,15 @@ public class OrderServiceImpl implements OrderService {
     SeckillActivityDO activity = activityMapper.selectById(order.getActivityId());
     String goodsName = activity != null ? activity.getGoodsName() : "";
 
-    return OrderStatusRespDTO.builder()
+    OrderStatusRespDTO result = OrderStatusRespDTO.builder()
         .orderNo(order.getOrderNo())
         .status(mapStatus(order.getStatus()))
         .seckillPrice(order.getSeckillPrice())
         .goodsName(goodsName)
         .build();
+
+    stringRedisTemplate.opsForValue().set(cacheKey, JSON.toJSONString(result), Duration.ofMinutes(10));
+    return result;
   }
 
   @Override

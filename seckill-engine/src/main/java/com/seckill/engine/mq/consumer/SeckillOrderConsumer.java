@@ -1,5 +1,6 @@
 package com.seckill.engine.mq.consumer;
 
+import static com.seckill.common.constant.RedisKeyConstants.orderStatusKey;
 import static com.seckill.common.constant.RedisKeyConstants.requestKey;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -7,8 +8,11 @@ import com.seckill.common.dao.entity.SeckillOrderDO;
 import com.seckill.common.dao.entity.StockDeductLogDO;
 import com.seckill.common.dao.mapper.SeckillOrderMapper;
 import com.seckill.common.dao.mapper.StockDeductLogMapper;
+import com.seckill.common.dao.entity.SeckillActivityDO;
+import com.seckill.common.dao.mapper.SeckillActivityMapper;
 import com.seckill.engine.mq.OrderMessage;
 import com.seckill.engine.service.StockService;
+import com.alibaba.fastjson2.JSON;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
@@ -26,8 +30,37 @@ public class SeckillOrderConsumer implements RocketMQListener<OrderMessage> {
 
   private final StockService stockService;
   private final SeckillOrderMapper orderMapper;
+  private final SeckillActivityMapper activityMapper;
   private final StockDeductLogMapper deductLogMapper;
   private final StringRedisTemplate stringRedisTemplate;
+
+  private String mapStatus(Integer status) {
+    return switch (status) {
+      case 0 -> "PENDING";
+      case 1 -> "UNPAID";
+      case 2 -> "SUCCESS";
+      case 3 -> "FAILED";
+      case 4 -> "TIMEOUT";
+      default -> "UNKNOWN";
+    };
+  }
+
+  private void cacheOrderStatus(String orderNo, Integer status, Long activityId, java.math.BigDecimal seckillPrice) {
+    String goodsName = "";
+    if (activityId != null) {
+      SeckillActivityDO activity = activityMapper.selectById(activityId);
+      if (activity != null) {
+        goodsName = activity.getGoodsName();
+      }
+    }
+    com.seckill.engine.dto.resp.OrderStatusRespDTO dto = com.seckill.engine.dto.resp.OrderStatusRespDTO.builder()
+        .orderNo(orderNo)
+        .status(mapStatus(status))
+        .seckillPrice(seckillPrice)
+        .goodsName(goodsName)
+        .build();
+    stringRedisTemplate.opsForValue().set(orderStatusKey(orderNo), JSON.toJSONString(dto), java.time.Duration.ofMinutes(10));
+  }
 
   @Override
   @Transactional
@@ -51,6 +84,9 @@ public class SeckillOrderConsumer implements RocketMQListener<OrderMessage> {
           .eq(SeckillOrderDO::getOrderNo, message.getOrderNo())
           .set(SeckillOrderDO::getStatus, 1));
 
+      // 4. 写入订单状态缓存
+      cacheOrderStatus(message.getOrderNo(), 1, message.getActivityId(), message.getSeckillPrice());
+
       log.info("订单处理成功，待支付: orderNo={}, remaining={}", message.getOrderNo(), remaining);
 
     } catch (Exception e) {
@@ -63,6 +99,9 @@ public class SeckillOrderConsumer implements RocketMQListener<OrderMessage> {
       orderMapper.update(null, new LambdaUpdateWrapper<SeckillOrderDO>()
           .eq(SeckillOrderDO::getOrderNo, message.getOrderNo())
           .set(SeckillOrderDO::getStatus, 3));
+
+      // 写入订单状态缓存
+      cacheOrderStatus(message.getOrderNo(), 3, message.getActivityId(), message.getSeckillPrice());
     }
   }
 }

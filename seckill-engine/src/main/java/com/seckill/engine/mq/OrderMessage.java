@@ -19,4 +19,5 @@ public class OrderMessage implements Serializable {
   private Long activityId;
   private Long userId;
   private Integer bucketIndex;
+  private java.math.BigDecimal seckillPrice;
 }

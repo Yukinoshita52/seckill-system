@@ -60,6 +60,7 @@ public class SeckillServiceImpl implements SeckillService {
         .activityId(activity.getId())
         .userId(userId)
         .bucketIndex(bucket)
+        .seckillPrice(activity.getSeckillPrice())
         .build();
     try {
       orderProducer.send(message);
