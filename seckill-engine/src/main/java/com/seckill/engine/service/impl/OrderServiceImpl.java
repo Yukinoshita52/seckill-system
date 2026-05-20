@@ -24,6 +24,7 @@ public class OrderServiceImpl implements OrderService {
   private static final int STATUS_UNPAID = 1;
   private static final int STATUS_SUCCESS = 2;
   private static final int STATUS_FAILED = 3;
+  private static final int STATUS_TIMEOUT = 4;
 
   private final SeckillOrderMapper orderMapper;
   private final SeckillActivityMapper activityMapper;
@@ -111,6 +112,7 @@ public class OrderServiceImpl implements OrderService {
     List<SeckillOrderDO> orders = orderMapper.selectList(
         new LambdaQueryWrapper<SeckillOrderDO>()
             .eq(SeckillOrderDO::getUserId, userId)
+            .in(SeckillOrderDO::getStatus, STATUS_UNPAID, STATUS_SUCCESS, STATUS_FAILED, STATUS_TIMEOUT)
             .orderByDesc(SeckillOrderDO::getCreateTime));
 
     return orders.stream().map(order -> {
