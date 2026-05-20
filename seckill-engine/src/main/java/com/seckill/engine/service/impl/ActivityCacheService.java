@@ -1,5 +1,6 @@
 package com.seckill.engine.service.impl;
 
+import static com.seckill.common.constant.RedisKeyConstants.ACTIVITY_IDS_SET;
 import static com.seckill.common.constant.RedisKeyConstants.ACTIVITY_PREFIX;
 
 import com.seckill.common.dao.entity.SeckillActivityDO;
@@ -7,8 +8,11 @@ import com.seckill.common.dao.mapper.SeckillActivityMapper;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -169,6 +173,35 @@ public class ActivityCacheService {
   /** 删除活动缓存 */
   public void deleteFromRedis(Long activityId) {
     stringRedisTemplate.delete(KEY_PREFIX + activityId);
+  }
+
+  /** 将活动 ID 加入全量 ID 集合 */
+  public void addActivityId(Long activityId) {
+    stringRedisTemplate.opsForSet().add(ACTIVITY_IDS_SET, String.valueOf(activityId));
+  }
+
+  /** 从 Redis 读取所有活动（纯缓存，不查 DB） */
+  public List<SeckillActivityDO> listAllFromCache() {
+    Set<String> ids = stringRedisTemplate.opsForSet().members(ACTIVITY_IDS_SET);
+    if (ids == null || ids.isEmpty()) {
+      return List.of();
+    }
+    List<SeckillActivityDO> result = new ArrayList<>();
+    for (String idStr : ids) {
+      SeckillActivityDO activity = getFromRedis(Long.parseLong(idStr));
+      if (activity != null) {
+        result.add(activity);
+      }
+    }
+    return result;
+  }
+
+  /** 更新缓存中活动的 status 字段 */
+  public void updateStatus(Long activityId, int status) {
+    String key = KEY_PREFIX + activityId;
+    if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(key))) {
+      stringRedisTemplate.opsForHash().put(key, "status", String.valueOf(status));
+    }
   }
 
   private String nullToEmpty(String s) {

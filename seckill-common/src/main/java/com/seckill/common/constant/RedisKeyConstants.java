@@ -14,6 +14,9 @@ public final class RedisKeyConstants {
   /** total:{activityId} — 总库存计数 */
   public static final String TOTAL_PREFIX = "total:";
 
+  /** activity:ids — 全量活动 ID 集合 */
+  public static final String ACTIVITY_IDS_SET = "activity:ids";
+
   /** bought:{activityId} — 已购买用户 Set */
   public static final String BOUGHT_PREFIX = "bought:";
 

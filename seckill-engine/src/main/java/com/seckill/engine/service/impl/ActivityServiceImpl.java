@@ -1,7 +1,6 @@
 package com.seckill.engine.service.impl;
 
 import com.seckill.common.dao.entity.SeckillActivityDO;
-import com.seckill.common.dao.mapper.SeckillActivityMapper;
 import com.seckill.engine.dto.resp.ActivityQueryRespDTO;
 import com.seckill.engine.service.ActivityService;
 import com.seckill.engine.service.StockService;
@@ -20,7 +19,6 @@ public class ActivityServiceImpl implements ActivityService {
 
   private final StockService stockService;
   private final ActivityCacheService activityCacheService;
-  private final SeckillActivityMapper activityMapper;
 
   @Override
   public ActivityQueryRespDTO queryActivity(Long id) {
@@ -47,11 +45,10 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public List<ActivityQueryRespDTO> listActivities() {
-    List<SeckillActivityDO> activities = activityMapper.selectList(null);
+    List<SeckillActivityDO> activities = activityCacheService.listAllFromCache();
     return activities.stream()
         .map(activity -> {
           long remainStock = stockService.getTotalStock(activity.getId());
-          // 未结束的活动 Redis 缓存可能未初始化，兜底为 totalStock
           if (remainStock == 0 && resolveStatus(activity) != 2) {
             remainStock = activity.getTotalStock();
           }
