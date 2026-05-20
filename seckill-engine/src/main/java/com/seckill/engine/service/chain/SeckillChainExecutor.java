@@ -16,9 +16,10 @@ public class SeckillChainExecutor {
   public SeckillChainExecutor(
       SeckillParamCheckHandler paramCheck,
       ActivityStatusCheckHandler activityStatusCheck,
-      UserRepeatCheckHandler userRepeatCheck,
+      UserRepeatRequestCheckHandler userRepeatRequestCheck,
+      UserRepeatBoughtCheckHandler userRepeatBoughtCheck,
       StockPreCheckHandler stockPreCheck) {
-    this.handlers = List.of(paramCheck, activityStatusCheck, userRepeatCheck, stockPreCheck);
+    this.handlers = List.of(paramCheck, activityStatusCheck, userRepeatRequestCheck, userRepeatBoughtCheck, stockPreCheck);
   }
 
   /** 执行责任链校验，返回携带活动信息的上下文 */

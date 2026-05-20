@@ -17,6 +17,9 @@ public final class RedisKeyConstants {
   /** bought:{activityId} — 已购买用户 Set */
   public static final String BOUGHT_PREFIX = "bought:";
 
+  /** request:{activityId}:{userId} — 用户抢购请求进行中标记 */
+  public static final String REQUEST_PREFIX = "request:";
+
   public static String activityKey(Long activityId) {
     return ACTIVITY_PREFIX + activityId;
   }
@@ -31,5 +34,9 @@ public final class RedisKeyConstants {
 
   public static String boughtKey(Long activityId) {
     return BOUGHT_PREFIX + activityId;
+  }
+
+  public static String requestKey(Long activityId, Long userId) {
+    return REQUEST_PREFIX + activityId + ":" + userId;
   }
 }

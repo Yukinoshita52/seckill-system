@@ -1,5 +1,7 @@
 package com.seckill.engine.mq.consumer;
 
+import static com.seckill.common.constant.RedisKeyConstants.requestKey;
+
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.seckill.common.dao.entity.SeckillOrderDO;
 import com.seckill.common.dao.entity.StockDeductLogDO;
@@ -11,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +27,7 @@ public class SeckillOrderConsumer implements RocketMQListener<OrderMessage> {
   private final StockService stockService;
   private final SeckillOrderMapper orderMapper;
   private final StockDeductLogMapper deductLogMapper;
+  private final StringRedisTemplate stringRedisTemplate;
 
   @Override
   @Transactional
@@ -52,7 +56,10 @@ public class SeckillOrderConsumer implements RocketMQListener<OrderMessage> {
     } catch (Exception e) {
       log.error("订单处理失败: orderNo={}, reason={}", message.getOrderNo(), e.getMessage());
 
-      // 3. 更新订单状态为 FAILED
+      // 删除 request key，允许用户重试
+      stringRedisTemplate.delete(requestKey(message.getActivityId(), message.getUserId()));
+
+      // 更新订单状态为 FAILED
       orderMapper.update(null, new LambdaUpdateWrapper<SeckillOrderDO>()
           .eq(SeckillOrderDO::getOrderNo, message.getOrderNo())
           .set(SeckillOrderDO::getStatus, 3));

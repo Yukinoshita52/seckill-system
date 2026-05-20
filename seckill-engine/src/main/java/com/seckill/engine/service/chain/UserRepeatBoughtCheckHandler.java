@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 /** 用户重复购买校验处理器 — 检查 Redis bought set */
 @Component
 @RequiredArgsConstructor
-public class UserRepeatCheckHandler implements SeckillChainHandler {
+public class UserRepeatBoughtCheckHandler implements SeckillChainHandler {
 
   private final StringRedisTemplate stringRedisTemplate;
 

@@ -1,5 +1,7 @@
 package com.seckill.engine.service.impl;
 
+import static com.seckill.common.constant.RedisKeyConstants.requestKey;
+
 import com.seckill.common.dao.entity.SeckillActivityDO;
 import com.seckill.common.dao.entity.SeckillOrderDO;
 import com.seckill.common.dao.mapper.SeckillOrderMapper;
@@ -16,6 +18,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ThreadLocalRandom;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -26,6 +29,7 @@ public class SeckillServiceImpl implements SeckillService {
   private final SeckillOrderMapper orderMapper;
   private final SeckillChainExecutor chainExecutor;
   private final SeckillOrderProducer orderProducer;
+  private final StringRedisTemplate stringRedisTemplate;
 
   private static final DateTimeFormatter ORDER_NO_FMT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
@@ -65,6 +69,8 @@ public class SeckillServiceImpl implements SeckillService {
       failedOrder.setOrderNo(orderNo);
       failedOrder.setStatus(3);
       orderMapper.updateById(failedOrder);
+      // 删除 request key，允许用户重试
+      stringRedisTemplate.delete(requestKey(activity.getId(), userId));
       throw new com.seckill.framework.exception.ServiceException("B000200", "系统繁忙，请稍后重试");
     }
 
