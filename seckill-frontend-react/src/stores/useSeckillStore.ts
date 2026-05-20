@@ -20,7 +20,8 @@ export const useSeckillStore = create<SeckillState>((set) => ({
     set({ loading: true, error: null });
     try {
       const response = await activityApi.getActivities();
-      set({ activities: response.data || [], loading: false });
+      const list = (response.data || []).filter((a) => a.status !== 2);
+      set({ activities: list, loading: false });
     } catch (error) {
       set({ loading: false, error: (error as Error).message });
     }

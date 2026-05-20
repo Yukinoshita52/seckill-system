@@ -51,6 +51,10 @@ public class ActivityServiceImpl implements ActivityService {
     return activities.stream()
         .map(activity -> {
           long remainStock = stockService.getTotalStock(activity.getId());
+          // 未开始的活动 Redis 缓存可能未初始化，兜底为 totalStock
+          if (remainStock == 0 && resolveStatus(activity) == 0) {
+            remainStock = activity.getTotalStock();
+          }
           return ActivityQueryRespDTO.builder()
               .id(activity.getId())
               .activityName(activity.getActivityName())
