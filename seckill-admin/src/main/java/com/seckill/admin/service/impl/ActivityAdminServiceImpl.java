@@ -40,10 +40,6 @@ public class ActivityAdminServiceImpl implements ActivityAdminService {
         .build();
     activityMapper.insert(activity);
     log.info("活动创建成功: id={}", activity.getId());
-
-    // 同步 Redis：加入 ID 集合 + 写入活动缓存
-    syncToRedisOnCreate(activity);
-
     return toRespDTO(activity);
   }
 
@@ -66,10 +62,6 @@ public class ActivityAdminServiceImpl implements ActivityAdminService {
 
     activityMapper.updateById(activity);
     log.info("活动更新成功: id={}", id);
-
-    // 同步 Redis 缓存
-    syncToRedisOnCreate(activity);
-
     return toRespDTO(activity);
   }
 
@@ -144,38 +136,6 @@ public class ActivityAdminServiceImpl implements ActivityAdminService {
     }
 
     log.info("活动缓存初始化完成: activityId={}, stock={}, buckets={}, ttl={}s", id, activity.getTotalStock(), activity.getBucketCount(), ttlSeconds);
-  }
-
-  private void syncToRedisOnCreate(SeckillActivityDO activity) {
-    Long id = activity.getId();
-
-    // 加入全量 ID 集合
-    stringRedisTemplate.opsForSet().add(ACTIVITY_IDS_SET, String.valueOf(id));
-
-    // 写入活动信息 Hash
-    java.util.Map<String, String> hash = new java.util.HashMap<>();
-    hash.put("id", String.valueOf(id));
-    hash.put("activityName", activity.getActivityName() != null ? activity.getActivityName() : "");
-    hash.put("goodsId", String.valueOf(activity.getGoodsId()));
-    hash.put("goodsName", activity.getGoodsName() != null ? activity.getGoodsName() : "");
-    hash.put("originalPrice", activity.getOriginalPrice().toPlainString());
-    hash.put("seckillPrice", activity.getSeckillPrice().toPlainString());
-    hash.put("totalStock", String.valueOf(activity.getTotalStock()));
-    hash.put("bucketCount", String.valueOf(activity.getBucketCount()));
-    hash.put("startTime", activity.getStartTime().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-    hash.put("endTime", activity.getEndTime().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-    hash.put("status", String.valueOf(activity.getStatus()));
-
-    String key = activityKey(id);
-    stringRedisTemplate.opsForHash().putAll(key, hash);
-
-    long ttlSeconds = java.util.concurrent.TimeUnit.HOURS.toSeconds(2)
-        + java.time.Duration.between(java.time.LocalDateTime.now(), activity.getEndTime()).getSeconds();
-    if (ttlSeconds > 0) {
-      stringRedisTemplate.expire(key, ttlSeconds, java.util.concurrent.TimeUnit.SECONDS);
-    }
-
-    log.debug("活动缓存已同步: key={}", key);
   }
 
   private ActivityRespDTO toRespDTO(SeckillActivityDO activity) {

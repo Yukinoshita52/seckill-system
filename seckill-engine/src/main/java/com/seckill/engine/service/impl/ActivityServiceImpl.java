@@ -1,13 +1,15 @@
 package com.seckill.engine.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.seckill.common.dao.entity.SeckillActivityDO;
+import com.seckill.common.dao.mapper.SeckillActivityMapper;
 import com.seckill.engine.dto.resp.ActivityQueryRespDTO;
 import com.seckill.engine.service.ActivityService;
 import com.seckill.engine.service.StockService;
 import com.seckill.framework.exception.ClientException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,7 @@ public class ActivityServiceImpl implements ActivityService {
 
   private final StockService stockService;
   private final ActivityCacheService activityCacheService;
+  private final SeckillActivityMapper activityMapper;
 
   @Override
   public ActivityQueryRespDTO queryActivity(Long id) {
@@ -45,27 +48,35 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public List<ActivityQueryRespDTO> listActivities() {
-    List<SeckillActivityDO> activities = activityCacheService.listAllFromCache();
-    return activities.stream()
-        .map(activity -> {
-          long remainStock = stockService.getTotalStock(activity.getId());
-          if (remainStock == 0 && resolveStatus(activity) != 2) {
-            remainStock = activity.getTotalStock();
-          }
-          return ActivityQueryRespDTO.builder()
-              .id(activity.getId())
-              .activityName(activity.getActivityName())
-              .goodsName(activity.getGoodsName())
-              .originalPrice(activity.getOriginalPrice())
-              .seckillPrice(activity.getSeckillPrice())
-              .totalStock(activity.getTotalStock())
-              .remainStock(remainStock)
-              .startTime(activity.getStartTime())
-              .endTime(activity.getEndTime())
-              .status(resolveStatus(activity))
-              .build();
-        })
-        .collect(Collectors.toList());
+    // 只查 ID 列表（轻量查询），详情从 Redis 读取
+    List<Long> ids = activityMapper.selectList(
+        new LambdaQueryWrapper<SeckillActivityDO>().select(SeckillActivityDO::getId))
+        .stream().map(SeckillActivityDO::getId).toList();
+
+    List<ActivityQueryRespDTO> result = new ArrayList<>();
+    for (Long id : ids) {
+      SeckillActivityDO activity = activityCacheService.getFromRedis(id);
+      if (activity == null) {
+        continue; // 缓存未命中，跳过
+      }
+      long remainStock = stockService.getTotalStock(id);
+      if (remainStock == 0 && resolveStatus(activity) != 2) {
+        remainStock = activity.getTotalStock();
+      }
+      result.add(ActivityQueryRespDTO.builder()
+          .id(activity.getId())
+          .activityName(activity.getActivityName())
+          .goodsName(activity.getGoodsName())
+          .originalPrice(activity.getOriginalPrice())
+          .seckillPrice(activity.getSeckillPrice())
+          .totalStock(activity.getTotalStock())
+          .remainStock(remainStock)
+          .startTime(activity.getStartTime())
+          .endTime(activity.getEndTime())
+          .status(resolveStatus(activity))
+          .build());
+    }
+    return result;
   }
 
   private int resolveStatus(SeckillActivityDO activity) {
