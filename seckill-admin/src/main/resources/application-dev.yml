@@ -14,4 +14,4 @@ spring:
 
 jwt:
   secret: your-jwt-secret-key-at-least-32-bytes-long
-  expiration: 7200
+  expiration: 86400

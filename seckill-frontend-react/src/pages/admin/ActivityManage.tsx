@@ -32,7 +32,8 @@ export default function ActivityManage() {
       const response = await activityApi.getAdminActivities();
       setActivities(response.data || []);
     } catch (err) {
-      setError((err as Error).message);
+      const msg = (err as Error).message;
+      if (!msg.includes('登录已过期')) setError(msg);
     } finally {
       setLoading(false);
     }
@@ -58,7 +59,9 @@ export default function ActivityManage() {
       Toast.success('活动创建成功');
       fetchActivities();
     } catch (error) {
-      Toast.error('创建活动失败，请重试');
+      if (!(error as Error).message?.includes('登录已过期')) {
+        Toast.error('创建活动失败，请重试');
+      }
     }
   };
 
@@ -67,7 +70,9 @@ export default function ActivityManage() {
       await activityApi.initCache(activityId);
       Toast.success('缓存初始化成功');
     } catch (error) {
-      Toast.error('缓存初始化失败');
+      if (!(error as Error).message?.includes('登录已过期')) {
+        Toast.error('缓存初始化失败');
+      }
     }
   };
 

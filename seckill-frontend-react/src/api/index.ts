@@ -43,10 +43,6 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401) {
       storage.clear();
       onUnauthorized?.();
-      // 避免在登录页重复跳转
-      if (!window.location.pathname.includes('/login')) {
-        window.location.href = '/login';
-      }
       return Promise.reject(new Error('登录已过期，请重新登录'));
     }
     if (error.message === 'Network Error') {

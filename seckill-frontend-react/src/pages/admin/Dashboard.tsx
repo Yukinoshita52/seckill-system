@@ -41,7 +41,8 @@ export default function Dashboard() {
         setActivities(response.data || []);
         setError(null);
       } catch (err) {
-        setError((err as Error).message);
+        const msg = (err as Error).message;
+        if (!msg.includes('登录已过期')) setError(msg);
       } finally {
         setLoading(false);
       }

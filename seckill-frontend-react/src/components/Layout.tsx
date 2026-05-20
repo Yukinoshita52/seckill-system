@@ -3,6 +3,7 @@ import { Layout as SemiLayout, Nav, Button, Avatar } from '@douyinfe/semi-ui';
 import { IconHome, IconSetting } from '@douyinfe/semi-icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../stores/useAuthStore';
+import { storage } from '../utils/storage';
 
 const { Header, Content } = SemiLayout;
 
@@ -13,7 +14,10 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, username, logout } = useAuthStore();
+  const { logout } = useAuthStore();
+  // Read directly from storage to stay in sync after 401 clears it
+  const isAuthenticated = !!storage.getToken();
+  const username = storage.getUsername();
 
   const handleLogout = () => {
     logout();

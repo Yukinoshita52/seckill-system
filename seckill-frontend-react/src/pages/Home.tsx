@@ -5,8 +5,9 @@ import { demoApi } from '../api/demo';
 import { DemoMetrics } from '../types/demo';
 
 function useActiveSection(sectionCount: number) {
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState<number | undefined>(undefined);
   const refs = useRef<(HTMLElement | null)[]>([]);
+  const initializing = useRef(true);
 
   useEffect(() => {
     const observers: IntersectionObserver[] = [];
@@ -23,10 +24,11 @@ function useActiveSection(sectionCount: number) {
       observer.observe(el);
       observers.push(observer);
     });
+    requestAnimationFrame(() => { initializing.current = false; });
     return () => observers.forEach((o) => o.disconnect());
   }, [sectionCount]);
 
-  return { activeIndex, refs };
+  return { activeIndex, initializing: initializing.current, refs };
 }
 
 export default function Home() {
@@ -41,7 +43,9 @@ export default function Home() {
   const [demoRunMessage, setDemoRunMessage] = useState<string | null>(null);
 
   const SECTION_COUNT = 4;
-  const { activeIndex, refs } = useActiveSection(SECTION_COUNT);
+  const { activeIndex, initializing, refs } = useActiveSection(SECTION_COUNT);
+  const sectionClass = (index: number) =>
+    `home-section-inner${activeIndex === undefined || activeIndex === index ? ' section-visible' : ''}${!initializing ? ' section-animated' : ''}`;
 
   const demoActivity = useMemo(() => {
     if (selectedActivityId != null) {
@@ -124,7 +128,7 @@ export default function Home() {
         ref={setRef(0)}
         className="home-snap-section"
       >
-        <div className={`home-section-inner ${activeIndex === 0 ? 'section-visible' : ''}`}>
+        <div className={sectionClass(0)}>
           <div className="section-label" style={{ marginBottom: '16px' }}>Seckill System / Architecture Demo</div>
           <h1 style={{
             fontFamily: 'var(--font-display)',
@@ -154,7 +158,7 @@ export default function Home() {
         ref={setRef(1)}
         className="home-snap-section"
       >
-        <div className={`home-section-inner ${activeIndex === 1 ? 'section-visible' : ''}`}>
+        <div className={sectionClass(1)}>
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
             <div className="section-label" style={{ marginBottom: '12px' }}>Technical Architecture</div>
             <h2 style={{
@@ -242,7 +246,7 @@ export default function Home() {
         ref={setRef(2)}
         className="home-snap-section"
       >
-        <div className={`home-section-inner ${activeIndex === 2 ? 'section-visible' : ''}`}>
+        <div className={sectionClass(2)}>
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
             <div className="section-label" style={{ marginBottom: '12px' }}>Order Lifecycle</div>
             <h2 style={{
@@ -330,7 +334,7 @@ export default function Home() {
         ref={setRef(3)}
         className="home-snap-section"
       >
-        <div className={`home-section-inner ${activeIndex === 3 ? 'section-visible' : ''}`}>
+        <div className={sectionClass(3)}>
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
             <div className="section-label" style={{ marginBottom: '12px' }}>Live Demo</div>
             <h2 style={{
