@@ -1,6 +1,7 @@
 package com.seckill.engine.service.impl;
 
 import com.seckill.common.dao.entity.SeckillActivityDO;
+import com.seckill.engine.cache.ActivityCacheService;
 import com.seckill.engine.dto.resp.DemoMetricsRespDTO;
 import com.seckill.engine.dto.resp.DemoStatusCountRespDTO;
 import com.seckill.engine.mapper.DemoMetricsMapper;

@@ -6,7 +6,6 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 const Home = lazy(() => import('./pages/Home'));
 const Activities = lazy(() => import('./pages/Activities'));
-const ActivityDetail = lazy(() => import('./pages/ActivityDetail'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const Dashboard = lazy(() => import('./pages/admin/Dashboard'));
@@ -29,14 +28,6 @@ export default function AppRoutes() {
           element={
             <Layout>
               <Home />
-            </Layout>
-          }
-        />
-        <Route
-          path="/activity/:id"
-          element={
-            <Layout>
-              <ActivityDetail />
             </Layout>
           }
         />

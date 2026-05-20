@@ -1,4 +1,4 @@
-package com.seckill.engine.service.impl;
+package com.seckill.engine.cache;
 
 import static com.seckill.common.constant.RedisKeyConstants.ACTIVITY_PREFIX;
 

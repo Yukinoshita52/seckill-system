@@ -3,7 +3,7 @@ import { Activity } from '../types/activity';
 
 interface SeckillButtonProps {
   activity: Activity;
-  onSeckill: (id: number) => void;
+  onSeckill?: (id: number) => void;
   loading?: boolean;
 }
 
@@ -24,7 +24,7 @@ export default function SeckillButton({ activity, onSeckill, loading }: SeckillB
       theme="solid"
       disabled={isDisabled}
       loading={loading}
-      onClick={(e) => { e.stopPropagation(); onSeckill(activity.id); }}
+      onClick={(e) => { e.stopPropagation(); onSeckill?.(activity.id); }}
       className="w-full"
     >
       {getButtonText()}

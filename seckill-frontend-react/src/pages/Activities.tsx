@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { Card, Typography, Tag } from '@douyinfe/semi-ui';
-import { useNavigate } from 'react-router-dom';
 import { useSeckillStore } from '../stores/useSeckillStore';
 import Countdown from '../components/Countdown';
 import StockProgress from '../components/StockProgress';
@@ -33,7 +32,6 @@ function SkeletonCard() {
 }
 
 export default function Activities() {
-  const navigate = useNavigate();
   const { activities, loading, error, fetchActivities } = useSeckillStore();
 
   useEffect(() => {
@@ -70,11 +68,7 @@ export default function Activities() {
             </div>
           ) : (
             activities.map((activity) => (
-              <div
-                key={activity.id}
-                style={{ cursor: 'pointer' }}
-                onClick={() => navigate(`/activity/${activity.id}`)}
-              >
+              <div key={activity.id}>
                 <Card
                   className="card-glow"
                   style={{ overflow: 'visible' }}
@@ -170,9 +164,7 @@ export default function Activities() {
                     </div>
                   )}
 
-                  <div onClick={(e) => e.stopPropagation()}>
-                    <SeckillButton activity={activity} onSeckill={() => navigate(`/activity/${activity.id}`)} />
-                  </div>
+                  <SeckillButton activity={activity} />
                 </Card>
               </div>
             ))

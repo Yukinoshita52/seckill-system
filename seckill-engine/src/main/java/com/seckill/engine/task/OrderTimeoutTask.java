@@ -1,4 +1,4 @@
-package com.seckill.engine.job;
+package com.seckill.engine.task;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.seckill.common.dao.entity.SeckillOrderDO;
