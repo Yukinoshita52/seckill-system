@@ -90,7 +90,8 @@ public class StockServiceImpl implements StockService {
   public void compensateStock(Long activityId, Long userId, int bucketIndex) {
     String stockKey = stockKey(activityId, bucketIndex);
     String boughtKey = boughtKey(activityId);
-    List<String> keys = Arrays.asList(stockKey, boughtKey);
+    String totalKey = totalKey(activityId);
+    List<String> keys = Arrays.asList(stockKey, boughtKey, totalKey);
     stringRedisTemplate.execute(compensateScript, keys, String.valueOf(userId));
   }
 
