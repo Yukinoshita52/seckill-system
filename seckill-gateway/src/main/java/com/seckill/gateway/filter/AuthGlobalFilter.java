@@ -85,7 +85,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
   private Mono<Void> unauthorized(ServerWebExchange exchange, String message) {
     ServerHttpResponse response = exchange.getResponse();
-    response.setStatusCode(HttpStatus.OK);
+    response.setStatusCode(HttpStatus.UNAUTHORIZED);
     response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
 
     String body = "{\"code\":\"A000500\",\"message\":\"" + message + "\",\"data\":null,\"requestId\":\"\"}";
