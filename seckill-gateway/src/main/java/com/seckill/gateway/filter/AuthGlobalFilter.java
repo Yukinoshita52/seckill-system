@@ -1,11 +1,12 @@
 package com.seckill.gateway.filter;
 
+import com.seckill.gateway.config.JwtProperties;
 import com.seckill.gateway.toolkit.JwtUtil;
 import io.jsonwebtoken.Claims;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -20,13 +21,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-/** 网关全局认证过滤器 — 校验 JWT token */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
-  @Value("${jwt.secret}")
-  private String jwtSecret;
+  private final JwtProperties jwtProperties;
 
   private static final List<String> WHITE_LIST = List.of(
       "/api/auth/login",
@@ -64,7 +64,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
     }
 
     String token = authHeader.substring(7);
-    Claims claims = JwtUtil.parseToken(token, jwtSecret);
+    Claims claims = JwtUtil.parseToken(token, jwtProperties.getSecret());
     if (claims == null) {
       return unauthorized(exchange, "登录已过期");
     }

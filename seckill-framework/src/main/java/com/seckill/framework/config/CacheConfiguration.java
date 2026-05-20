@@ -13,8 +13,8 @@ public class CacheConfiguration {
   @Value("${seckill.redis.key-prefix:seckill:}")
   private String keyPrefix;
 
-  @Bean
-  public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
+  @Bean("customRedisTemplate")
+  public RedisTemplate<String, Object> customRedisTemplate(RedisConnectionFactory factory) {
     RedisTemplate<String, Object> template = new RedisTemplate<>();
     template.setConnectionFactory(factory);
     RedisKeySerializer keySerializer = new RedisKeySerializer(keyPrefix);
