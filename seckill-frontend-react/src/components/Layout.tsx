@@ -45,6 +45,7 @@ export default function Layout({ children }: LayoutProps) {
 
           <div className="header-nav-shell">
             <Nav
+              key={location.pathname}
               mode="horizontal"
               selectedKeys={[location.pathname]}
               onSelect={({ selectedKeys }) => navigate(selectedKeys[0] as string)}
