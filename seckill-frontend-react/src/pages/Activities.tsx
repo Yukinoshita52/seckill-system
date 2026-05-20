@@ -47,11 +47,9 @@ export default function Activities() {
           <div className="section-label">精选活动</div>
           <h2 className="section-shell-title">本场秒杀列表</h2>
         </div>
-        <div className="section-shell-note">点击卡片查看详情、倒计时、库存进度与下单状态轮询</div>
       </div>
-      <div className="activity-showcase-grid">
-        <div className="activity-card-grid">
-          {loading ? (
+      <div className="activity-card-grid">
+        {loading ? (
             <>
               <SkeletonCard />
               <SkeletonCard />
@@ -180,22 +178,6 @@ export default function Activities() {
             ))
           )}
         </div>
-        <div className="activity-side-panel">
-          <div className="activity-side-card">
-            <div className="section-label">系统说明</div>
-            <h3 className="activity-side-title">这组活动用于展示真实秒杀链路</h3>
-            <p className="activity-side-copy">活动详情页会展示库存进度、倒计时、下单结果和订单状态轮询，适合在面试时完整演示一次请求如何进入系统并得到最终结果。</p>
-          </div>
-          <div className="activity-side-card">
-            <div className="section-label">状态流转</div>
-            <div className="activity-state-list">
-              <div className="activity-state-item"><span className="activity-state-dot pending" />PENDING: 请求受理，排队处理中</div>
-              <div className="activity-state-item"><span className="activity-state-dot success" />UNPAID: Lua 扣库存成功，订单待支付</div>
-              <div className="activity-state-item"><span className="activity-state-dot fail" />FAILED: 扣库存失败或消息处理异常</div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
