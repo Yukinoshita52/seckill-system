@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,11 +24,5 @@ public class ActivityController {
   @GetMapping("/list")
   public Result<List<ActivityQueryRespDTO>> listActivities() {
     return Results.success(activityService.listActivities());
-  }
-
-  @Operation(summary = "查询活动详情")
-  @GetMapping("/{id}")
-  public Result<ActivityQueryRespDTO> queryActivity(@PathVariable Long id) {
-    return Results.success(activityService.queryActivity(id));
   }
 }

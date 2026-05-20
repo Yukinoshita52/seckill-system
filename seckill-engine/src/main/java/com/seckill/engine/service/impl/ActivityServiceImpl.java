@@ -7,7 +7,6 @@ import com.seckill.engine.cache.ActivityCacheService;
 import com.seckill.engine.dto.resp.ActivityQueryRespDTO;
 import com.seckill.engine.service.ActivityService;
 import com.seckill.engine.service.StockService;
-import com.seckill.framework.exception.ClientException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,29 +22,6 @@ public class ActivityServiceImpl implements ActivityService {
   private final StockService stockService;
   private final ActivityCacheService activityCacheService;
   private final SeckillActivityMapper activityMapper;
-
-  @Override
-  public ActivityQueryRespDTO queryActivity(Long id) {
-    SeckillActivityDO activity = activityCacheService.getWithProtection(id);
-    if (activity == null) {
-      throw new ClientException("A000100", "活动不存在");
-    }
-
-    long remainStock = stockService.getTotalStock(id);
-
-    return ActivityQueryRespDTO.builder()
-        .id(activity.getId())
-        .activityName(activity.getActivityName())
-        .goodsName(activity.getGoodsName())
-        .originalPrice(activity.getOriginalPrice())
-        .seckillPrice(activity.getSeckillPrice())
-        .totalStock(activity.getTotalStock())
-        .remainStock(remainStock)
-        .startTime(activity.getStartTime())
-        .endTime(activity.getEndTime())
-        .status(resolveStatus(activity))
-        .build();
-  }
 
   @Override
   public List<ActivityQueryRespDTO> listActivities() {
