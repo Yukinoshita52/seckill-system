@@ -1,6 +1,6 @@
 package com.seckill.engine.service.chain;
 
-import com.seckill.common.dao.entity.SeckillActivityDO;
+import com.seckill.engine.dao.entity.SeckillActivityDO;
 import com.seckill.engine.dto.req.SeckillOrderReqDTO;
 import lombok.Data;
 

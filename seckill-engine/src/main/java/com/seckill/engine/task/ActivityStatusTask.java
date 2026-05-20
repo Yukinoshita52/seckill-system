@@ -2,8 +2,8 @@ package com.seckill.engine.task;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.seckill.common.dao.entity.SeckillActivityDO;
-import com.seckill.common.dao.mapper.SeckillActivityMapper;
+import com.seckill.engine.dao.entity.SeckillActivityDO;
+import com.seckill.engine.dao.mapper.SeckillActivityMapper;
 import com.seckill.engine.cache.ActivityCacheService;
 import java.time.LocalDateTime;
 import java.util.List;

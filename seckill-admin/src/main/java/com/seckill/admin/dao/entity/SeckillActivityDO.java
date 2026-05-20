@@ -1,4 +1,4 @@
-package com.seckill.common.dao.entity;
+package com.seckill.admin.dao.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import io.swagger.v3.oas.annotations.media.Schema;

@@ -1,6 +1,6 @@
 package com.seckill.engine.service.chain;
 
-import com.seckill.common.dao.entity.SeckillActivityDO;
+import com.seckill.engine.dao.entity.SeckillActivityDO;
 import com.seckill.engine.cache.ActivityCacheService;
 import com.seckill.framework.exception.ClientException;
 import java.time.LocalDateTime;

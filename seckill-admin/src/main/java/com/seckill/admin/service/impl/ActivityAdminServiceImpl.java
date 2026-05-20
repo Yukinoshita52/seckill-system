@@ -1,13 +1,13 @@
 package com.seckill.admin.service.impl;
 
-import static com.seckill.common.constant.RedisKeyConstants.*;
+import static com.seckill.admin.common.constant.RedisKeyConstants.*;
 
 import com.seckill.admin.dto.req.ActivityCreateReqDTO;
 import com.seckill.admin.dto.req.ActivityUpdateReqDTO;
 import com.seckill.admin.dto.resp.ActivityRespDTO;
 import com.seckill.admin.service.ActivityAdminService;
-import com.seckill.common.dao.entity.SeckillActivityDO;
-import com.seckill.common.dao.mapper.SeckillActivityMapper;
+import com.seckill.admin.dao.entity.SeckillActivityDO;
+import com.seckill.admin.dao.mapper.SeckillActivityMapper;
 import com.seckill.framework.exception.ClientException;
 import java.util.List;
 import java.util.stream.Collectors;

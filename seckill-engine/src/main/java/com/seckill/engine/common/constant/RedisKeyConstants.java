@@ -1,4 +1,4 @@
-package com.seckill.common.constant;
+package com.seckill.engine.common.constant;
 
 /** Redis key 前缀常量，统一管理 key 格式 */
 public final class RedisKeyConstants {

@@ -3,8 +3,8 @@ package com.seckill.engine.service.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import com.seckill.common.dao.entity.SeckillActivityDO;
-import com.seckill.common.dao.mapper.SeckillActivityMapper;
+import com.seckill.engine.dao.entity.SeckillActivityDO;
+import com.seckill.engine.dao.mapper.SeckillActivityMapper;
 import com.seckill.engine.dto.resp.DemoMetricsRespDTO;
 import com.seckill.engine.dto.resp.DemoStatusCountRespDTO;
 import com.seckill.engine.mapper.DemoMetricsMapper;

@@ -1,4 +1,4 @@
-package com.seckill.common.config;
+package com.seckill.engine.config;
 
 import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;

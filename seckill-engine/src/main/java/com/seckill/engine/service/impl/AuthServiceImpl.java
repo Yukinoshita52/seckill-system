@@ -1,8 +1,8 @@
 package com.seckill.engine.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.seckill.common.dao.entity.UserDO;
-import com.seckill.common.dao.mapper.UserMapper;
+import com.seckill.engine.dao.entity.UserDO;
+import com.seckill.engine.dao.mapper.UserMapper;
 import com.seckill.engine.dto.req.LoginReqDTO;
 import com.seckill.engine.dto.req.RegisterReqDTO;
 import com.seckill.engine.dto.resp.LoginRespDTO;

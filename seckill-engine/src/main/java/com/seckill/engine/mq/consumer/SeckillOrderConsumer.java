@@ -1,15 +1,15 @@
 package com.seckill.engine.mq.consumer;
 
-import static com.seckill.common.constant.RedisKeyConstants.orderStatusKey;
-import static com.seckill.common.constant.RedisKeyConstants.requestKey;
+import static com.seckill.engine.common.constant.RedisKeyConstants.orderStatusKey;
+import static com.seckill.engine.common.constant.RedisKeyConstants.requestKey;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.seckill.common.dao.entity.SeckillOrderDO;
-import com.seckill.common.dao.entity.StockDeductLogDO;
-import com.seckill.common.dao.mapper.SeckillOrderMapper;
-import com.seckill.common.dao.mapper.StockDeductLogMapper;
-import com.seckill.common.dao.entity.SeckillActivityDO;
-import com.seckill.common.dao.mapper.SeckillActivityMapper;
+import com.seckill.engine.dao.entity.SeckillOrderDO;
+import com.seckill.engine.dao.entity.StockDeductLogDO;
+import com.seckill.engine.dao.mapper.SeckillOrderMapper;
+import com.seckill.engine.dao.mapper.StockDeductLogMapper;
+import com.seckill.engine.dao.entity.SeckillActivityDO;
+import com.seckill.engine.dao.mapper.SeckillActivityMapper;
 import com.seckill.engine.mq.OrderMessage;
 import com.seckill.engine.service.StockService;
 import com.alibaba.fastjson2.JSON;

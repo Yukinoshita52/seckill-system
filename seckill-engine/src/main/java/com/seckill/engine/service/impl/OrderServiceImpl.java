@@ -1,13 +1,13 @@
 package com.seckill.engine.service.impl;
 
-import static com.seckill.common.constant.RedisKeyConstants.orderStatusKey;
+import static com.seckill.engine.common.constant.RedisKeyConstants.orderStatusKey;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.seckill.common.dao.entity.SeckillActivityDO;
-import com.seckill.common.dao.entity.SeckillOrderDO;
-import com.seckill.common.dao.mapper.SeckillActivityMapper;
-import com.seckill.common.dao.mapper.SeckillOrderMapper;
+import com.seckill.engine.dao.entity.SeckillActivityDO;
+import com.seckill.engine.dao.entity.SeckillOrderDO;
+import com.seckill.engine.dao.mapper.SeckillActivityMapper;
+import com.seckill.engine.dao.mapper.SeckillOrderMapper;
 import com.seckill.engine.dto.resp.OrderStatusRespDTO;
 import com.seckill.engine.service.OrderService;
 import com.seckill.engine.service.StockService;

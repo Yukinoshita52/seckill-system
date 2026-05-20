@@ -1,4 +1,4 @@
-package com.seckill.framework.toolkit;
+package com.seckill.engine.toolkit;
 
 public final class StockDecrementReturnCombinedUtil {
   private static final int COUNT_BITS = 14;

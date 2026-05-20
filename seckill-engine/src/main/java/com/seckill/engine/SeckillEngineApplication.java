@@ -13,8 +13,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @Slf4j
 @SpringBootApplication
 @EnableScheduling
-@ComponentScan(basePackages = {"com.seckill.engine", "com.seckill.common.config", "com.seckill.framework"})
-@MapperScan({"com.seckill.common.dao.mapper", "com.seckill.engine.mapper"})
+@ComponentScan(basePackages = {"com.seckill.engine", "com.seckill.framework"})
+@MapperScan({"com.seckill.engine.dao.mapper", "com.seckill.engine.mapper"})
 public class SeckillEngineApplication {
 
   private final Environment env;

@@ -1,10 +1,10 @@
 package com.seckill.engine.service.impl;
 
-import static com.seckill.common.constant.RedisKeyConstants.requestKey;
+import static com.seckill.engine.common.constant.RedisKeyConstants.requestKey;
 
-import com.seckill.common.dao.entity.SeckillActivityDO;
-import com.seckill.common.dao.entity.SeckillOrderDO;
-import com.seckill.common.dao.mapper.SeckillOrderMapper;
+import com.seckill.engine.dao.entity.SeckillActivityDO;
+import com.seckill.engine.dao.entity.SeckillOrderDO;
+import com.seckill.engine.dao.mapper.SeckillOrderMapper;
 import com.seckill.engine.dto.req.SeckillOrderReqDTO;
 import com.seckill.engine.dto.resp.SeckillOrderRespDTO;
 import com.seckill.engine.mq.OrderMessage;

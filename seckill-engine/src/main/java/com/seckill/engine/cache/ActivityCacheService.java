@@ -1,9 +1,9 @@
 package com.seckill.engine.cache;
 
-import static com.seckill.common.constant.RedisKeyConstants.ACTIVITY_PREFIX;
+import static com.seckill.engine.common.constant.RedisKeyConstants.ACTIVITY_PREFIX;
 
-import com.seckill.common.dao.entity.SeckillActivityDO;
-import com.seckill.common.dao.mapper.SeckillActivityMapper;
+import com.seckill.engine.dao.entity.SeckillActivityDO;
+import com.seckill.engine.dao.mapper.SeckillActivityMapper;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

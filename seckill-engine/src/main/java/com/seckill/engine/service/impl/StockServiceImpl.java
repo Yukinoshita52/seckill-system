@@ -1,11 +1,11 @@
 package com.seckill.engine.service.impl;
 
-import static com.seckill.common.constant.RedisKeyConstants.*;
+import static com.seckill.engine.common.constant.RedisKeyConstants.*;
 
 import com.seckill.engine.service.StockService;
 import com.seckill.framework.exception.ClientException;
 import com.seckill.framework.exception.ServiceException;
-import com.seckill.framework.toolkit.StockDecrementReturnCombinedUtil;
+import com.seckill.engine.toolkit.StockDecrementReturnCombinedUtil;
 import jakarta.annotation.PostConstruct;
 import java.time.Duration;
 import java.time.LocalDateTime;

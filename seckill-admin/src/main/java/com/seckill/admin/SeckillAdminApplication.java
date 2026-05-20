@@ -11,8 +11,8 @@ import org.springframework.core.env.Environment;
 
 @Slf4j
 @SpringBootApplication
-@ComponentScan(basePackages = {"com.seckill.admin", "com.seckill.common.config"})
-@MapperScan("com.seckill.common.dao.mapper")
+@ComponentScan(basePackages = {"com.seckill.admin", "com.seckill.framework"})
+@MapperScan("com.seckill.admin.dao.mapper")
 public class SeckillAdminApplication {
 
   private final Environment env;

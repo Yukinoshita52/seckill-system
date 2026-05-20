@@ -1,6 +1,6 @@
 package com.seckill.engine.service.chain;
 
-import static com.seckill.common.constant.RedisKeyConstants.totalKey;
+import static com.seckill.engine.common.constant.RedisKeyConstants.totalKey;
 
 import com.seckill.framework.exception.ClientException;
 import lombok.RequiredArgsConstructor;

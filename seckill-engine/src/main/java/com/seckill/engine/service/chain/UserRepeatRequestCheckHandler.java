@@ -1,6 +1,6 @@
 package com.seckill.engine.service.chain;
 
-import static com.seckill.common.constant.RedisKeyConstants.requestKey;
+import static com.seckill.engine.common.constant.RedisKeyConstants.requestKey;
 
 import com.seckill.framework.exception.ClientException;
 import com.seckill.framework.toolkit.UserContext;
