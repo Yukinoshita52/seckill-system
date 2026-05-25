@@ -21,6 +21,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
             "/api/auth/register",
             "/api/activity/list",
             "/api/activity/{id}",
+            "/api/activity/checkSoldOut/{activityId}",
             "/api/demo/**",
             "/doc.html",
             "/swagger-ui/**",
