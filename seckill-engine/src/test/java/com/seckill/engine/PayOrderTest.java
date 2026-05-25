@@ -19,6 +19,11 @@ public class PayOrderTest {
   @Autowired private OrderService orderService;
   @Autowired private SeckillOrderMapper orderMapper;
 
+  @Test
+  public void payAllOrders(){
+    payAllOrders(13L);
+  }
+
   /**
    * 批量支付指定活动的所有待支付订单（伪调用，跳过 UserContext）。
    *
@@ -46,6 +51,6 @@ public class PayOrderTest {
   @Test
   public void paySingleOrder() {
     // TODO: 指定 orderNo 和 userId 后直接调用
-    // orderService.payOrder("SK20260525120000123456", 12345L);
+//     orderService.payOrder("SK20260525120000123456", 12345L);
   }
 }
