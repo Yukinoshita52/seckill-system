@@ -11,6 +11,7 @@ import com.seckill.engine.service.SeckillService;
 import com.seckill.engine.service.StockService;
 import com.seckill.engine.service.chain.SeckillChainContext;
 import com.seckill.engine.service.chain.SeckillChainExecutor;
+import com.seckill.framework.exception.ServiceException;
 import com.seckill.framework.toolkit.UserContext;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -53,7 +54,13 @@ public class SeckillServiceImpl implements SeckillService {
         .bucketIndex(bucket)
         .status(1)
         .build();
-    orderMapper.insert(order);
+    try {
+      orderMapper.insert(order);
+    } catch (Exception e){
+      log.error("订单写入失败，回补库存: orderNo={}", orderNo, e);
+      stockService.compensateStock(activity.getId(), userId, bucket);
+      throw e;
+    }
 
     // 4. 异步发送 MQ → 消费者写审计日志 + 缓存订单状态
     OrderMessage message = OrderMessage.builder()
@@ -71,7 +78,7 @@ public class SeckillServiceImpl implements SeckillService {
       throw new com.seckill.framework.exception.ServiceException("B000200", "系统繁忙，请稍后重试");
     }
 
-    log.info("秒杀下单成功: orderNo={}, userId={}, activityId={}", orderNo, userId, activity.getId());
+//    log.info("秒杀下单成功: orderNo={}, userId={}, activityId={}", orderNo, userId, activity.getId());
 
     return SeckillOrderRespDTO.builder()
         .orderNo(orderNo)

@@ -26,7 +26,7 @@ public class SeckillChainExecutor {
   public SeckillChainContext execute(SeckillOrderReqDTO req) {
     SeckillChainContext context = new SeckillChainContext(req);
     for (SeckillChainHandler handler : handlers) {
-      log.debug("执行责任链处理器: {}", handler.name());
+//      log.debug("执行责任链处理器: {}", handler.name());
       handler.handle(context);
     }
     return context;

@@ -36,6 +36,6 @@ public class SeckillOrderConsumer implements RocketMQListener<OrderMessage> {
         .bucketIndex(message.getBucketIndex())
         .build());
 
-    log.info("订单确认完成: orderNo={}", message.getOrderNo());
+//    log.info("订单确认完成: orderNo={}", message.getOrderNo());
   }
 }

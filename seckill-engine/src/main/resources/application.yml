@@ -39,7 +39,7 @@ knife4j:
 
 logging:
   level:
-    com.seckill: DEBUG
+    com.seckill: INFO
 
 seckill:
   redis:

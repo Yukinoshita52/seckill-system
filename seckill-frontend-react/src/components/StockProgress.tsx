@@ -1,12 +1,14 @@
-import { Tag } from '@douyinfe/semi-ui';
-
 interface StockStatusProps {
   soldOut: boolean;
 }
 
 export default function StockStatus({ soldOut }: StockStatusProps) {
-  if (soldOut) {
-    return <Tag color="red" size="large">已售罄</Tag>;
+  if (!soldOut) {
+    return null;
   }
-  return <Tag color="green" size="large">有货</Tag>;
+  return (
+    <span style={{ color: 'rgba(239,68,68,0.85)', fontSize: '12px', fontWeight: 600 }}>
+      已售罄
+    </span>
+  );
 }
