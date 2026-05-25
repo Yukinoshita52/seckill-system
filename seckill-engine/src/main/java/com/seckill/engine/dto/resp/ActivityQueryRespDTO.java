@@ -32,8 +32,8 @@ public class ActivityQueryRespDTO {
   @Schema(description = "总库存")
   private Integer totalStock;
 
-  @Schema(description = "剩余库存")
-  private Long remainStock;
+  @Schema(description = "已售罄")
+  private Boolean soldOut;
 
   @Schema(description = "开始时间")
   private LocalDateTime startTime;

@@ -171,6 +171,12 @@ public class ActivityCacheService {
     stringRedisTemplate.delete(KEY_PREFIX + activityId);
   }
 
+  /** 仅更新 Redis Hash 中的 status 字段 */
+  public void updateStatusInRedis(Long activityId, Integer status) {
+    String key = KEY_PREFIX + activityId;
+    stringRedisTemplate.opsForHash().put(key, "status", String.valueOf(status));
+  }
+
   private String nullToEmpty(String s) {
     return s != null ? s : "";
   }

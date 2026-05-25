@@ -8,7 +8,8 @@ import com.seckill.engine.dao.mapper.SeckillActivityMapper;
 import com.seckill.engine.dao.mapper.SeckillOrderMapper;
 import com.seckill.engine.dto.resp.OrderStatusRespDTO;
 import com.seckill.engine.service.OrderService;
-import com.seckill.engine.service.StockService;
+import com.seckill.engine.service.StockChangeLogService;
+import com.seckill.engine.dao.entity.StockChangeLogDO;
 import com.seckill.framework.exception.ClientException;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,6 +29,7 @@ public class OrderServiceImpl implements OrderService {
   private final SeckillOrderMapper orderMapper;
   private final SeckillActivityMapper activityMapper;
   private final StockService stockService;
+  private final StockChangeLogService stockChangeLogService;
 
   @Override
   public OrderStatusRespDTO queryOrderStatus(String orderNo) {
@@ -103,6 +105,14 @@ public class OrderServiceImpl implements OrderService {
     }
 
     stockService.compensateStock(order.getActivityId(), userId, order.getBucketIndex());
+    stockChangeLogService.log(StockChangeLogDO.builder()
+        .activityId(order.getActivityId())
+        .userId(userId)
+        .orderNo(orderNo)
+        .changeType(1)
+        .changeQuantity(1)
+        .bucketIndex(order.getBucketIndex())
+        .build());
     log.info("订单已取消: orderNo={}, userId={}", orderNo, userId);
   }
 

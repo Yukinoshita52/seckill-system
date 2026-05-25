@@ -2,6 +2,11 @@ import apiClient from './index';
 import { Activity, ActivityCreateRequest } from '../types/activity';
 import { ApiResponse } from '../types/api';
 
+export interface SoldOutCheckResponse {
+  activityId: number;
+  soldOut: boolean;
+}
+
 export const activityApi = {
   getActivities(): Promise<ApiResponse<Activity[]>> {
     return apiClient.get('/activity/list');
@@ -9,6 +14,10 @@ export const activityApi = {
 
   getActivity(id: number): Promise<ApiResponse<Activity>> {
     return apiClient.get(`/activity/${id}`);
+  },
+
+  checkSoldOut(activityId: number): Promise<ApiResponse<SoldOutCheckResponse>> {
+    return apiClient.get(`/activity/checkSoldOut/${activityId}`);
   },
 
   // 管理后台接口

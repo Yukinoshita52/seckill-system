@@ -1,6 +1,7 @@
 package com.seckill.engine.controller;
 
 import com.seckill.engine.dto.resp.ActivityQueryRespDTO;
+import com.seckill.engine.dto.resp.SoldOutCheckRespDTO;
 import com.seckill.engine.service.ActivityService;
 import com.seckill.framework.result.Result;
 import com.seckill.framework.result.Results;
@@ -9,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,5 +26,11 @@ public class ActivityController {
   @GetMapping("/list")
   public Result<List<ActivityQueryRespDTO>> listActivities() {
     return Results.success(activityService.listActivities());
+  }
+
+  @Operation(summary = "检查活动是否已售罄（供前端轮询）")
+  @GetMapping("/checkSoldOut/{activityId}")
+  public Result<SoldOutCheckRespDTO> checkSoldOut(@PathVariable Long activityId) {
+    return Results.success(activityService.checkSoldOut(activityId));
   }
 }

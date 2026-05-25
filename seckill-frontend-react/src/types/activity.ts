@@ -5,10 +5,10 @@ export interface Activity {
   originalPrice: number;
   seckillPrice: number;
   totalStock: number;
-  remainStock: number;
+  soldOut: boolean;
   startTime: string;
   endTime: string;
-  /** 0-未开始 1-进行中 2-已结束 */
+  /** 0-未开始 1-进行中 2-已售罄 3-已结束 */
   status: number;
 }
 

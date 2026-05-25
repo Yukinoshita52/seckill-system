@@ -5,8 +5,8 @@ import com.seckill.engine.dao.entity.SeckillActivityDO;
 import com.seckill.engine.dao.mapper.SeckillActivityMapper;
 import com.seckill.engine.cache.ActivityCacheService;
 import com.seckill.engine.dto.resp.ActivityQueryRespDTO;
+import com.seckill.engine.dto.resp.SoldOutCheckRespDTO;
 import com.seckill.engine.service.ActivityService;
-import com.seckill.engine.service.StockService;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,13 +19,11 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ActivityServiceImpl implements ActivityService {
 
-  private final StockService stockService;
   private final ActivityCacheService activityCacheService;
   private final SeckillActivityMapper activityMapper;
 
   @Override
   public List<ActivityQueryRespDTO> listActivities() {
-    // 只查 ID 列表（轻量查询），详情从 Redis 读取
     List<Long> ids = activityMapper.selectList(
         new LambdaQueryWrapper<SeckillActivityDO>().select(SeckillActivityDO::getId))
         .stream().map(SeckillActivityDO::getId).toList();
@@ -34,9 +32,8 @@ public class ActivityServiceImpl implements ActivityService {
     for (Long id : ids) {
       SeckillActivityDO activity = activityCacheService.getFromRedis(id);
       if (activity == null) {
-        continue; // 缓存未命中，跳过
+        continue;
       }
-      long remainStock = stockService.getTotalStock(id);
       result.add(ActivityQueryRespDTO.builder()
           .id(activity.getId())
           .activityName(activity.getActivityName())
@@ -44,7 +41,7 @@ public class ActivityServiceImpl implements ActivityService {
           .originalPrice(activity.getOriginalPrice())
           .seckillPrice(activity.getSeckillPrice())
           .totalStock(activity.getTotalStock())
-          .remainStock(remainStock)
+          .soldOut(resolveStatus(activity) == 2)
           .startTime(activity.getStartTime())
           .endTime(activity.getEndTime())
           .status(resolveStatus(activity))
@@ -53,14 +50,30 @@ public class ActivityServiceImpl implements ActivityService {
     return result;
   }
 
+  @Override
+  public SoldOutCheckRespDTO checkSoldOut(Long activityId) {
+    SeckillActivityDO activity = activityCacheService.getFromRedis(activityId);
+    if (activity == null) {
+      return SoldOutCheckRespDTO.builder()
+          .activityId(activityId)
+          .soldOut(false)
+          .build();
+    }
+    boolean soldOut = activity.getStatus() != null && activity.getStatus() == 2;
+    return SoldOutCheckRespDTO.builder()
+        .activityId(activityId)
+        .soldOut(soldOut)
+        .build();
+  }
+
   private int resolveStatus(SeckillActivityDO activity) {
     LocalDateTime now = LocalDateTime.now();
     if (now.isBefore(activity.getStartTime())) {
-      return 0; // 未开始
+      return 0;
     }
     if (now.isAfter(activity.getEndTime())) {
-      return 2; // 已结束
+      return 3;
     }
-    return 1; // 进行中
+    return activity.getStatus();
   }
 }
