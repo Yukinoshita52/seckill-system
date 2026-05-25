@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Card, Typography, Tag } from '@douyinfe/semi-ui';
 import { useSeckillStore } from '../stores/useSeckillStore';
 import Countdown from '../components/Countdown';
-import StockProgress from '../components/StockProgress';
+import StockStatus from '../components/StockProgress';
 import SeckillButton from '../components/SeckillButton';
 import { formatPrice, getStatusText, getStatusTagType } from '../utils/format';
 
@@ -143,7 +143,7 @@ export default function Activities() {
                   </div>
 
                   <div>
-                    <StockProgress totalStock={activity.totalStock} remainStock={activity.remainStock} />
+                    <StockStatus soldOut={activity.soldOut} />
                   </div>
 
                   {activity.status === 0 && (

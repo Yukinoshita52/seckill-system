@@ -13,21 +13,18 @@ export default function SeckillButton({ activity }: SeckillButtonProps) {
   const [loading, setLoading] = useState(false);
   const [orderStatus, setOrderStatus] = useState<OrderStatus | null>(null);
 
-  const isDisabled = activity.status !== 1 || activity.remainStock <= 0;
-
   const getButtonText = () => {
     if (orderStatus === 'UNPAID') return '抢购成功';
     if (orderStatus === 'FAILED') return '库存不足';
     if (activity.status === 0) return '未开始';
-    if (activity.status === 1) {
-      return activity.remainStock > 0 ? '立即抢购' : '已售罄';
-    }
+    if (activity.soldOut) return '已售罄';
+    if (activity.status === 1) return '立即抢购';
     return '已结束';
   };
 
   const handleClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isDisabled || loading) return;
+    if (activity.soldOut || loading) return;
 
     setLoading(true);
     try {
@@ -48,7 +45,7 @@ export default function SeckillButton({ activity }: SeckillButtonProps) {
     <Button
       type="primary"
       theme="solid"
-      disabled={isDisabled || isFinal}
+      disabled={activity.soldOut || isFinal || activity.status !== 1}
       loading={loading}
       onClick={handleClick}
       className="w-full"
