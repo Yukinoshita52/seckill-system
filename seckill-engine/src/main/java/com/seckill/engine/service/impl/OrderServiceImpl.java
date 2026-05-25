@@ -10,6 +10,7 @@ import com.seckill.engine.dto.resp.OrderStatusRespDTO;
 import com.seckill.engine.service.OrderService;
 import com.seckill.engine.service.StockChangeLogService;
 import com.seckill.engine.dao.entity.StockChangeLogDO;
+import com.seckill.engine.service.StockService;
 import com.seckill.framework.exception.ClientException;
 import java.time.LocalDateTime;
 import java.util.List;
