@@ -1,6 +1,7 @@
 package com.seckill.engine.task;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.seckill.engine.cache.ActivityCacheService;
 import com.seckill.engine.dao.entity.SeckillActivityDO;
 import com.seckill.engine.dao.entity.SeckillOrderDO;
@@ -32,7 +33,7 @@ public class SoldOutCheckTask {
   private static final int STATUS_PAID = 2;
 
   @Scheduled(fixedDelayString = "${seckill.soldout-scan-interval:600000}")
-  public void checkSoldOut() {
+    public void checkSoldOut() {
     List<SeckillActivityDO> activities = activityMapper.selectList(
         new LambdaQueryWrapper<SeckillActivityDO>()
             .eq(SeckillActivityDO::getStatus, STATUS_ONGOING)
@@ -52,6 +53,11 @@ public class SoldOutCheckTask {
         log.info("活动已售罄: activityId={}, paidCount={}, totalStock={}",
             activity.getId(), paidCount, activity.getTotalStock());
         activityCacheService.updateStatusInRedis(activity.getId(), STATUS_SOLD_OUT);
+        activityMapper.update(null,
+            new LambdaUpdateWrapper<SeckillActivityDO>()
+                .eq(SeckillActivityDO::getId, activity.getId())
+                .eq(SeckillActivityDO::getStatus, STATUS_ONGOING)
+                .set(SeckillActivityDO::getStatus, STATUS_SOLD_OUT));
       }
     }
   }
