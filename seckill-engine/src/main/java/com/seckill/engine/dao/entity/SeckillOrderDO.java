@@ -35,7 +35,7 @@ public class SeckillOrderDO {
   @Schema(description = "库存桶索引")
   private Integer bucketIndex;
 
-  @Schema(description = "状态: 0-待支付 1-已支付 2-已取消 3-已超时")
+  @Schema(description = "状态: 1-待支付 2-已支付 4-已超时")
   private Integer status;
 
   @TableField(fill = FieldFill.INSERT)

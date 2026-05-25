@@ -37,9 +37,6 @@ public class ActivityServiceImpl implements ActivityService {
         continue; // 缓存未命中，跳过
       }
       long remainStock = stockService.getTotalStock(id);
-      if (remainStock == 0 && resolveStatus(activity) != 2) {
-        remainStock = activity.getTotalStock();
-      }
       result.add(ActivityQueryRespDTO.builder()
           .id(activity.getId())
           .activityName(activity.getActivityName())
