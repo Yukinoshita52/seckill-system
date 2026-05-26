@@ -18,6 +18,10 @@ desktop.ini
 
 # Java / Maven
 *.class
+
+# Sensitive config files (use .template instead)
+**/application-dev.yml
+**/application-test.yml
 *.jar
 *.war
 *.ear

@@ -1,0 +1,26 @@
+server:
+  port: 8081
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/seckill?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    username: seckill
+    password: ${MYSQL_PASSWORD}
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: 26379
+      lettuce:
+        pool:
+          max-active: 20
+          max-idle: 10
+          min-idle: 5
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 86400000
+
+logging:
+  level:
+    com.seckill: debug
