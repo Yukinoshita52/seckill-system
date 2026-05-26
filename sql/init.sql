@@ -36,33 +36,33 @@ CREATE TABLE t_seckill_order (
     pay_time        DATETIME COMMENT '支付时间',
     is_deleted      TINYINT NOT NULL DEFAULT 0 COMMENT '0-正常 1-已删除',
     UNIQUE INDEX uk_order_no (order_no),
-    INDEX idx_user_id (user_id),
+    INDEX idx_user_activity (user_id, activity_id),
     INDEX idx_status (status, create_time)
 ) COMMENT '秒杀订单表';
 
--- 库存流水表
+-- 库存扣减流水表
 CREATE TABLE t_stock_deduct_log (
     id              BIGINT PRIMARY KEY AUTO_INCREMENT,
-    activity_id     BIGINT NOT NULL,
-    user_id         BIGINT NOT NULL,
+    activity_id     BIGINT NOT NULL COMMENT '活动ID',
+    user_id         BIGINT NOT NULL COMMENT '用户ID',
     bucket_index    INT NOT NULL COMMENT '分桶索引',
-    deduct_time     DATETIME DEFAULT CURRENT_TIMESTAMP,
+    deduct_time     DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '扣减时间',
     is_deleted      TINYINT NOT NULL DEFAULT 0 COMMENT '0-正常 1-已删除',
     INDEX idx_activity (activity_id, deduct_time)
-) COMMENT '库存扣减流水';
+) COMMENT '库存扣减流水表';
 
 -- 用户表
 CREATE TABLE t_user (
     id              BIGINT PRIMARY KEY AUTO_INCREMENT,
     username        VARCHAR(50) NOT NULL UNIQUE,
-    password        VARCHAR(128) NOT NULL,
+    password        VARCHAR(128) NOT NULL COMMENT 'BCrypt加密',
     nickname        VARCHAR(50),
     create_time     DATETIME DEFAULT CURRENT_TIMESTAMP,
     update_time     DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     is_deleted      TINYINT NOT NULL DEFAULT 0 COMMENT '0-正常 1-已删除'
 ) COMMENT '用户表';
 
--- 初始测试用户
+-- 初始测试用户（密码均为 123456）
 INSERT INTO t_user (username, password, nickname) VALUES
 ('user001', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', '测试用户1'),
 ('user002', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', '测试用户2'),
