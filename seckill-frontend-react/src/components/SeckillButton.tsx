@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button, Toast } from '@douyinfe/semi-ui';
 import { Activity } from '../types/activity';
 import { orderApi } from '../api/order';
+import CaptchaDialog from './CaptchaDialog';
 
 interface SeckillButtonProps {
   activity: Activity;
@@ -12,6 +13,7 @@ type OrderStatus = 'UNPAID' | 'FAILED';
 export default function SeckillButton({ activity }: SeckillButtonProps) {
   const [loading, setLoading] = useState(false);
   const [orderStatus, setOrderStatus] = useState<OrderStatus | null>(null);
+  const [captchaVisible, setCaptchaVisible] = useState(false);
 
   const getButtonText = () => {
     if (orderStatus === 'UNPAID') return '抢购成功';
@@ -22,13 +24,17 @@ export default function SeckillButton({ activity }: SeckillButtonProps) {
     return '已结束';
   };
 
-  const handleClick = async (e: React.MouseEvent) => {
+  const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (activity.soldOut || loading) return;
+    setCaptchaVisible(true);
+  };
 
+  const handleCaptchaConfirm = async (captchaToken: string, captchaCode: string) => {
+    setCaptchaVisible(false);
     setLoading(true);
     try {
-      await orderApi.placeOrder({ activityId: activity.id });
+      await orderApi.placeOrder({ activityId: activity.id, captchaToken, captchaCode });
       setOrderStatus('UNPAID');
       Toast.success({ content: '抢购成功！请前往支付', id: 'seckill-toast' });
     } catch (err) {
@@ -42,15 +48,22 @@ export default function SeckillButton({ activity }: SeckillButtonProps) {
   const isFinal = orderStatus === 'UNPAID' || orderStatus === 'FAILED';
 
   return (
-    <Button
-      type="primary"
-      theme="solid"
-      disabled={activity.soldOut || isFinal || activity.status !== 1}
-      loading={loading}
-      onClick={handleClick}
-      className="w-full"
-    >
-      {getButtonText()}
-    </Button>
+    <>
+      <Button
+        type="primary"
+        theme="solid"
+        disabled={activity.soldOut || isFinal || activity.status !== 1}
+        loading={loading}
+        onClick={handleClick}
+        className="w-full"
+      >
+        {getButtonText()}
+      </Button>
+      <CaptchaDialog
+        visible={captchaVisible}
+        onConfirm={handleCaptchaConfirm}
+        onCancel={() => setCaptchaVisible(false)}
+      />
+    </>
   );
 }

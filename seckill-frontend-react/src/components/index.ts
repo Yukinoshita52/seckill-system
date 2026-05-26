@@ -4,3 +4,4 @@ export { default as Countdown } from './Countdown';
 export { default as StockProgress } from './StockProgress';
 export { default as SeckillButton } from './SeckillButton';
 export { default as SeckillResult } from './SeckillResult';
+export { default as CaptchaDialog } from './CaptchaDialog';

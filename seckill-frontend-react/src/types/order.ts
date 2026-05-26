@@ -17,3 +17,8 @@ export interface PlaceOrderResponse {
   status: string;
   message: string;
 }
+
+export interface CaptchaResponse {
+  captchaToken: string;
+  captchaImage: string;
+}

@@ -1,8 +1,12 @@
 import apiClient from './index';
-import { PlaceOrderRequest, PlaceOrderResponse, OrderStatusResponse } from '../types/order';
+import { PlaceOrderRequest, PlaceOrderResponse, OrderStatusResponse, CaptchaResponse } from '../types/order';
 import { ApiResponse } from '../types/api';
 
 export const orderApi = {
+  getCaptcha(): Promise<ApiResponse<CaptchaResponse>> {
+    return apiClient.get('/seckill/captcha');
+  },
+
   placeOrder(data: PlaceOrderRequest): Promise<ApiResponse<PlaceOrderResponse>> {
     return apiClient.post('/seckill/order', data);
   },
