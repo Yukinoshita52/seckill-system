@@ -24,7 +24,13 @@ spring:
       - com.alibaba.cloud.nacos.NacosServiceAutoConfiguration
       - com.alibaba.cloud.nacos.NacosConfigAutoConfiguration
       - com.alibaba.cloud.sentinel.SentinelAutoConfiguration
-      - org.apache.rocketmq.spring.autoconfigure.RocketMQAutoConfiguration
+
+rocketmq:
+  name-server: REDACTED_ROCKETMQ_HOST:9876
+  producer:
+    group: seckill-producer-group
+    send-message-timeout: 3000
+    retry-times-when-send-failed: 2
 
 mybatis-plus:
   configuration:
