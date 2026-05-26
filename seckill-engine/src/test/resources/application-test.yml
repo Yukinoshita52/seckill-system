@@ -26,7 +26,7 @@ spring:
       - com.alibaba.cloud.sentinel.SentinelAutoConfiguration
 
 rocketmq:
-  name-server: REDACTED_ROCKETMQ_HOST:9876
+  name-server: ${ROCKETMQ_NAMESERVER:localhost:9876}
   producer:
     group: seckill-producer-group
     send-message-timeout: 3000
@@ -37,5 +37,5 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 jwt:
-  secret: test-jwt-secret-key-for-unit-testing-only-32bytes
+  secret: ${JWT_SECRET:test-jwt-secret-key-for-unit-testing-only-32bytes}
   expiration: 7200

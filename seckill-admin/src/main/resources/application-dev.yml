@@ -15,5 +15,5 @@ spring:
       server-addr: localhost:8848
 
 jwt:
-  secret: your-jwt-secret-key-at-least-32-bytes-long
+  secret: ${JWT_SECRET:your-jwt-secret-key-at-least-32-bytes-long}
   expiration: 86400
