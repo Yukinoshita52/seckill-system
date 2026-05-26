@@ -20,6 +20,9 @@ public final class RedisKeyConstants {
   /** request:{activityId}:{userId} — 用户抢购请求进行中标记 */
   public static final String REQUEST_PREFIX = "request:";
 
+  /** captcha:{token} — 验证码答案 */
+  public static final String CAPTCHA_PREFIX = "captcha:";
+
   /** orderStatus:{orderNo} — 订单状态缓存 */
   public static final String ORDER_STATUS_PREFIX = "orderStatus:";
 
@@ -45,5 +48,9 @@ public final class RedisKeyConstants {
 
   public static String orderStatusKey(String orderNo) {
     return ORDER_STATUS_PREFIX + orderNo;
+  }
+
+  public static String captchaKey(String token) {
+    return CAPTCHA_PREFIX + token;
   }
 }

@@ -22,6 +22,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
             "/api/activity/list",
             "/api/activity/{id}",
             "/api/activity/checkSoldOut/{activityId}",
+            "/api/seckill/captcha",
             "/api/demo/**",
             "/doc.html",
             "/swagger-ui/**",

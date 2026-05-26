@@ -15,11 +15,12 @@ public class SeckillChainExecutor {
   // 按照构造顺序依次进行校验
   public SeckillChainExecutor(
       SeckillParamCheckHandler paramCheck,
+      CaptchaCheckHandler captchaCheck,
       ActivityStatusCheckHandler activityStatusCheck,
       UserRepeatRequestCheckHandler userRepeatRequestCheck,
       UserRepeatBoughtCheckHandler userRepeatBoughtCheck,
       StockPreCheckHandler stockPreCheck) {
-    this.handlers = List.of(paramCheck, activityStatusCheck, userRepeatRequestCheck, userRepeatBoughtCheck, stockPreCheck);
+    this.handlers = List.of(paramCheck, captchaCheck, activityStatusCheck, userRepeatRequestCheck, userRepeatBoughtCheck, stockPreCheck);
   }
 
   /** 执行责任链校验，返回携带活动信息的上下文 */
