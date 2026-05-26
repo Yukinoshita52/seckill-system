@@ -16,11 +16,6 @@ public class StockChangeLogServiceImpl implements StockChangeLogService {
 
   @Override
   public void log(StockChangeLogDO logEntry) {
-    try {
-      stockChangeLogMapper.insert(logEntry);
-    } catch (Exception e) {
-      log.error("库存变化日志写入失败: activityId={}, userId={}, type={}",
-          logEntry.getActivityId(), logEntry.getUserId(), logEntry.getChangeType(), e);
-    }
+    stockChangeLogMapper.insert(logEntry);
   }
 }

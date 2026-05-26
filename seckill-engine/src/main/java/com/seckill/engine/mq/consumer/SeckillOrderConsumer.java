@@ -16,7 +16,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@RocketMQMessageListener(topic = "seckill-order-topic", consumerGroup = "seckill-consumer-group")
+@RocketMQMessageListener(
+    topic = "seckill-order-topic",
+    consumerGroup = "seckill-consumer-group",
+    maxReconsumeTimes = 3,
+    consumeTimeout = 15000
+)
 public class SeckillOrderConsumer implements RocketMQListener<OrderMessage> {
 
   private final StockChangeLogService stockChangeLogService;
@@ -27,15 +32,15 @@ public class SeckillOrderConsumer implements RocketMQListener<OrderMessage> {
     log.info("收到消息: orderNo={}, userId={}, activityId={}",
         message.getOrderNo(), message.getUserId(), message.getActivityId());
 
+    // 消息幂等处理：orderNo是唯一键，重复插入会报错，保证只消费一次
+    // emmmmm……其他处理暂时不加，比如订单支付后——加积分、加活动热度、会员等级……
     stockChangeLogService.log(StockChangeLogDO.builder()
-        .activityId(message.getActivityId())
-        .userId(message.getUserId())
-        .orderNo(message.getOrderNo())
-        .changeType(0)
-        .changeQuantity(1)
-        .bucketIndex(message.getBucketIndex())
-        .build());
-
-//    log.info("订单确认完成: orderNo={}", message.getOrderNo());
+            .activityId(message.getActivityId())
+            .userId(message.getUserId())
+            .orderNo(message.getOrderNo())
+            .changeType(0)
+            .changeQuantity(1)
+            .bucketIndex(message.getBucketIndex())
+            .build());
   }
 }

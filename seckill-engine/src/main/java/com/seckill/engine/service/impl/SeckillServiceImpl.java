@@ -62,7 +62,7 @@ public class SeckillServiceImpl implements SeckillService {
       throw e;
     }
 
-    // 4. 异步发送 MQ → 消费者写审计日志 + 缓存订单状态
+    // 4. 同步发送 MQ → 消费者写审计日志 + 缓存订单状态
     OrderMessage message = OrderMessage.builder()
         .orderNo(orderNo)
         .activityId(activity.getId())
@@ -73,8 +73,9 @@ public class SeckillServiceImpl implements SeckillService {
     try {
       orderProducer.send(message);
     } catch (Exception e) {
-      log.error("MQ发送失败，回补库存: orderNo={}", orderNo, e);
+      log.error("MQ发送失败: orderNo={}", orderNo, e);
       stockService.compensateStock(activity.getId(), userId, bucket);
+      orderMapper.deleteById(order.getId());
       throw new com.seckill.framework.exception.ServiceException("B000200", "系统繁忙，请稍后重试");
     }
 

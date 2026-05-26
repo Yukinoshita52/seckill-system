@@ -3,6 +3,8 @@ package com.seckill.engine.mq.producer;
 import com.seckill.engine.mq.OrderMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.rocketmq.client.producer.SendCallback;
+import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
@@ -18,7 +20,7 @@ public class SeckillOrderProducer {
   private final RocketMQTemplate rocketMQTemplate;
 
   /**
-   * 发送订单消息到 RocketMQ
+   * 同步发送订单消息到 RocketMQ
    *
    * @param message 订单消息
    */
