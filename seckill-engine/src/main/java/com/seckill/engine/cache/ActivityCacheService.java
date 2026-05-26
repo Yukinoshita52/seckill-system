@@ -74,12 +74,6 @@ public class ActivityCacheService {
    *
    * <p>穿透防护：DB 不存在时写入空标记（TTL 2分钟），后续请求不再查 DB。
    * <p>击穿防护：双检锁模式，保证只有一个线程查 DB。
-   * <pre>
-   * 第一次读缓存 → miss → 尝试加锁
-   *   → 拿到锁 → 第二次读缓存 → miss → 查 DB → 写缓存 → 释放锁
-   *   → 拿到锁 → 第二次读缓存 → hit → 直接返回（其他线程已加载）
-   *   → 未拿到锁 → sleep → 重试（回到第一次读缓存）
-   * </pre>
    */
   public SeckillActivityDO getWithProtection(Long activityId) {
     // 1. 第一次读缓存
